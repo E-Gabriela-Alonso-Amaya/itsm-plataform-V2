@@ -1,0 +1,58 @@
+@use '@angular/material' as mat;
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --color-primary: #334155;        //  toolbar, botones principales
+  --color-primary-light: #475569;  //  hover, variante clara
+  --color-accent: #64748B;         //  botones secundarios
+  --color-accent-light: #94A3B8;   // hover accent
+  --color-warn: #8B0000;           //  errores, alertas, eliminar
+  --color-success: #15803D;        // confirmaciones, éxito
+  --color-background: #FFFFFF;     //  fondo general de la app
+  --color-surface: #F8FAFC;        //  tarjetas, formularios, tablas
+  --color-text: #0F172A;           //  texto principal
+  --color-text-light: #64748B;     // subtítulos, textos secundarios
+  --color-border: #E2E8F0;         //  bordes de tarjetas y tablas
+  --color-header-table: #334155;   // cabeceras de tablas
+  --font-main: 'Inter', sans-serif; // tipografía principal de toda la app
+}
+
+html {
+  height: 100%;
+  @include mat.theme(
+      (
+        color: (
+          primary: mat.$azure-palette,
+          tertiary: mat.$blue-palette,
+        ),
+        typography: Inter,
+        density: 0,
+      )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  font-size: 14px;
+  margin: 0;
+  height: 100%;
+}
+
+.mat-mdc-cell {
+  color: var(--color-text) !important;
+  background-color: #FFFFFF !important;
+}
+
+.mat-mdc-header-cell {
+  font-weight: bold !important;
+  color: var(--color-header-table) !important;
+  background-color: #FFFFFF !important;
+}

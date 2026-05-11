@@ -1,0 +1,14 @@
+// ─── DASHBOARD STYLES ─────────────────────────────────────────
+// Cada partial agrupa estilos de su responsabilidad.
+// Los componentes topbar, sidebar, drawer-employee y lightbox
+// tienen sus propios ficheros .scss independientes.
+
+@use 'styles/shell'      as *;
+@use 'styles/shared'     as *;
+@use 'styles/stats'      as *;
+@use 'styles/cards'      as *;
+@use 'styles/kanban'     as *;
+@use 'styles/inspector'  as *;
+@use 'styles/profile'    as *;
+@use 'styles/table'      as *;
+@use 'styles/responsive' as *;

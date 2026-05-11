@@ -1,0 +1,236 @@
+<div class="view-header mb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-800">Mi Trabajo</h1>
+    <p class="text-slate-500">Gestión de tus tickets asignados y métricas personales</p>
+  </div>
+</div>
+
+<!-- MÉTRICAS AGENTE -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-sky-50 rounded-xl flex items-center justify-center text-sky-600">
+        <mat-icon>assignment_ind</mat-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-slate-800">{{ agentStats?.myActiveCount || 0 }}</div>
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Mis Activos</div>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-slate-800">{{ agentStats?.myResolvedToday || 0 }}</div>
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Resueltos Hoy</div>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+        <mat-icon>timer</mat-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-slate-800">{{ agentStats?.avgResolutionTime || '0h' }}</div>
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tiempo Medio</div>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
+        <mat-icon>priority_high</mat-icon>
+      </div>
+      <div>
+        <div class="text-2xl font-bold text-slate-800">{{ agentStats?.slaAlerts || 0 }}</div>
+        <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Alertas SLA</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KANBAN 5 COLUMNAS PARA AGENTE -->
+<div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm overflow-x-auto">
+  <div class="kanban-board kanban-5col">
+    <!-- DISPONIBLES -->
+    <div class="kanban-col">
+      <div class="col-header col-new">
+        <span class="col-dot"></span><span class="col-name">Disponibles</span>
+        <span class="col-count">{{ colAvailable.length }}</span>
+      </div>
+      <div class="col-cards">
+        @for (t of colAvailable; track t.id) {
+          <div class="ticket-card" (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && t.startedAt">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getElapsedTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)"></div>
+              </div>
+            </div>
+
+            <div class="tc-footer">
+              <button class="btn-primary-sm w-full" (click)="$event.stopPropagation(); assign.emit(t)">Asumir</button>
+            </div>
+          </div>
+        }
+        @if (colAvailable.length === 0) { <div class="col-empty">Sin tickets</div> }
+      </div>
+    </div>
+
+    <!-- MIS TICKETS (NUEVOS) -->
+    <div class="kanban-col">
+      <div class="col-header col-assigned">
+        <span class="col-dot"></span><span class="col-name">Mis Tickets</span>
+        <span class="col-count">{{ colMine.length }}</span>
+      </div>
+      <div class="col-cards">
+        @for (t of colMine; track t.id) {
+          <div class="ticket-card is-assigned" (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && t.startedAt">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getElapsedTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)"></div>
+              </div>
+            </div>
+
+            <div class="tc-footer">
+              <div class="tc-status-actions">
+                <button class="btn-state btn-state-progress" (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Procesando'})">Empezar →</button>
+              </div>
+            </div>
+          </div>
+        }
+        @if (colMine.length === 0) { <div class="col-empty">Vacío</div> }
+      </div>
+    </div>
+
+    <!-- PROCESANDO -->
+    <div class="kanban-col">
+      <div class="col-header col-progress">
+        <span class="col-dot"></span><span class="col-name">Procesando</span>
+        <span class="col-count">{{ colInProgress.length }}</span>
+      </div>
+      <div class="col-cards">
+        @for (t of colInProgress; track t.id) {
+          <div class="ticket-card is-processing" (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && t.startedAt">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getElapsedTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)"></div>
+              </div>
+            </div>
+
+            <div class="tc-footer">
+              <div class="tc-status-actions">
+                <button class="btn-state btn-state-done" (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Resuelto'})">Resolver</button>
+              </div>
+            </div>
+          </div>
+        }
+        @if (colInProgress.length === 0) { <div class="col-empty">Vacío</div> }
+      </div>
+    </div>
+
+    <!-- EN ESPERA -->
+    <div class="kanban-col">
+      <div class="col-header col-waiting">
+        <span class="col-dot"></span><span class="col-name">En Espera</span>
+        <span class="col-count">{{ colWaiting.length }}</span>
+      </div>
+      <div class="col-cards">
+        @for (t of colWaiting; track t.id) {
+          <div class="ticket-card is-waiting" (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && t.startedAt">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getElapsedTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)"></div>
+              </div>
+            </div>
+
+            <div class="tc-footer">
+              <div class="tc-status-actions">
+                <button class="btn-state btn-state-done" (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Resuelto'})">Resolver</button>
+              </div>
+            </div>
+          </div>
+        }
+        @if (colWaiting.length === 0) { <div class="col-empty">Vacío</div> }
+      </div>
+    </div>
+
+    <!-- RESUELTOS -->
+    <div class="kanban-col">
+      <div class="col-header col-done">
+        <span class="col-dot"></span><span class="col-name">Resueltos</span>
+        <span class="col-count">{{ colDone.length }}</span>
+      </div>
+      <div class="col-cards">
+        @for (t of colDone; track t.id) {
+          <div class="ticket-card is-done opacity-60" (click)="openDrawer.emit(t)">
+            <div class="tc-title line-through">{{ t.title }}</div>
+            
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getElapsedTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)"></div>
+              </div>
+            </div>
+
+            <div class="mt-2 text-[10px] text-emerald-600 font-bold flex items-center gap-1"><mat-icon class="text-[12px]">check_circle</mat-icon> Finalizado</div>
+          </div>
+        }
+        @if (colDone.length === 0) { <div class="col-empty">Vacío</div> }
+      </div>
+    </div>
+  </div>
+</div>

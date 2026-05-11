@@ -1,0 +1,116 @@
+// ─── STATS ────────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+
+  &.stats-grid-agent {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #9ca3af;
+    border-radius: 10px 0 0 10px;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .stat-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #f1f5f9;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #64748b;
+    }
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  &.stat-total {
+    &::before { background: #6366f1; }
+    .stat-icon-wrap { background: #eef2ff; mat-icon { color: #6366f1; } }
+    .stat-num { color: #4338ca; }
+  }
+
+  &.stat-unassigned {
+    &::before { background: #dc2626; }
+    .stat-icon-wrap { background: #fef2f2; mat-icon { color: #dc2626; } }
+    .stat-num { color: #991b1b; }
+  }
+
+  &.stat-critical {
+    &::before { background: #dc2626; }
+    .stat-icon-wrap { background: #fef2f2; mat-icon { color: #dc2626; } }
+    .stat-num { color: #991b1b; }
+  }
+
+  &.stat-progress {
+    &::before { background: #2563eb; }
+    .stat-icon-wrap { background: #eff6ff; mat-icon { color: #2563eb; } }
+    .stat-num { color: #1e3a8a; }
+  }
+
+  &.stat-waiting {
+    &::before { background: #d97706; }
+    .stat-icon-wrap { background: #fffbeb; mat-icon { color: #d97706; } }
+    .stat-num { color: #78350f; }
+  }
+
+  &.stat-resolved {
+    &::before { background: #059669; }
+    .stat-icon-wrap { background: #ecfdf5; mat-icon { color: #059669; } }
+    .stat-num { color: #064e3b; }
+  }
+}
+

@@ -1,0 +1,12 @@
+@use '../../styles/shared' as *;
+@use '../../styles/inspector' as *;
+
+:host {
+  display: block;
+}
+
+// Add any component-specific overrides here if needed
+.inline-inspector {
+  height: auto;
+  max-height: 80vh;
+}

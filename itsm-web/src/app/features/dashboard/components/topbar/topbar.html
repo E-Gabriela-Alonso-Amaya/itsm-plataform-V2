@@ -1,0 +1,79 @@
+<header class="topbar">
+    <!-- BOTÓN HAMBURGUESA PARA MÓVIL y TABLET (abre el menú principal en móvil) -->
+    <button class="hamburger-btn" (click)="toggleMobileMenu()">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="topbar-logo">HELPDESK</span>
+    <!-- MENÚ PRINCIPAL HORIZONTAL -->
+    <nav class="topbar-nav" [class.mobile-open]="mobileMenuOpen">
+      @if (isAdmin) {
+        <a class="nav-link" [class.active]="activeView === 'dashboard'" (click)="onSetView('dashboard')">
+          Dashboard
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView.startsWith('admin_users') || activeView === 'admin_invite' || activeView === 'admin_matrix'" (click)="onSetView('admin_users')">
+          Gestión Usuarios
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'admin_projects' || activeView === 'admin_config_tech'" (click)="onSetView('admin_projects')">
+          Proyectos y Empresas
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'admin_ui' || activeView === 'admin_audit'" (click)="onSetView('admin_ui')">
+          Ajustes del Sistema
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'profile'" (click)="onSetView('profile')">
+          Mi Perfil
+          <div class="active-indicator"></div>
+        </a>
+      } @else if (isAgent) {
+        <a class="nav-link" [class.active]="activeView === 'agent_work' || activeView === 'dashboard'" (click)="onSetView('agent_work')">
+          Mi Trabajo
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'agent_history'" (click)="onSetView('agent_history')">
+          Historial
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'profile'" (click)="onSetView('profile')">
+          Mi Perfil
+          <div class="active-indicator"></div>
+        </a>
+      } @else {
+        <a class="nav-link" [class.active]="activeView === 'dashboard'" (click)="onSetView('dashboard')">
+          Dashboard
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'mine'" (click)="onSetView('mine')">
+          Historial
+          <div class="active-indicator"></div>
+        </a>
+        <a class="nav-link" [class.active]="activeView === 'profile'" (click)="onSetView('profile')">
+          Mi Perfil
+          <div class="active-indicator"></div>
+        </a>
+      }
+    </nav>
+
+    <span class="topbar-spacer"></span>
+
+    <!-- BOTÓN FAB MÓVIL PARA EMPRESAS -->
+    <button class="company-drawer-btn" (click)="toggleSidebar.emit()" title="Seleccionar Empresa">
+      <mat-icon>business</mat-icon>
+    </button>
+
+    <div class="topbar-user" (click)="onSetView('profile')" title="Ver mi perfil">
+      <span class="topbar-avatar">
+        @if (user?.avatarUrl) {
+        <img [src]="user!.avatarUrl" class="topbar-avatar-img" />
+        } @else {
+        {{ userInitials }}
+        }
+      </span>
+      <span class="topbar-name">{{ user?.name }}</span>
+    </div>
+    <button class="topbar-exit" (click)="logout.emit()" title="Cerrar sesión">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </header>

@@ -1,0 +1,86 @@
+<div class="view-header mb-8">
+  <h1 class="text-2xl font-bold text-slate-800">Mi Perfil</h1>
+  <p class="text-slate-500">Gestiona tu información personal y seguridad</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- INFORMACIÓN PERSONAL -->
+  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+      <mat-icon class="text-sky-500">person</mat-icon> Datos Personales
+    </h2>
+
+    <div class="space-y-6">
+      <div class="flex flex-col items-center mb-8">
+        <div class="relative group">
+          <div class="w-24 h-24 rounded-full bg-slate-100 overflow-hidden border-4 border-white shadow-md">
+            @if (profilePhotoPreview) {
+              <img [src]="profilePhotoPreview" class="w-full h-full object-cover" />
+            } @else if (user?.avatarUrl) {
+              <img [src]="user!.avatarUrl" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-300">
+                {{ user?.name?.charAt(0) }}
+              </div>
+            }
+          </div>
+          <label class="absolute bottom-0 right-0 w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center text-white cursor-pointer hover:bg-sky-600 transition-colors shadow-lg">
+            <mat-icon class="text-lg">photo_camera</mat-icon>
+            <input type="file" class="hidden" (change)="onPhotoSelected($event)" accept="image/*" />
+          </label>
+        </div>
+        <p class="text-xs text-slate-400 mt-3 font-medium">Click para cambiar avatar</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nombre Completo</label>
+        <input type="text" [(ngModel)]="editingName" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all" />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Correo Electrónico</label>
+        <input type="email" [value]="user?.email" disabled class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed" />
+      </div>
+
+      @if (profileMsg) { <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-1">{{ profileMsg }}</div> }
+      @if (profileError) { <div class="p-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-1">{{ profileError }}</div> }
+
+      <button (click)="saveProfile()" [disabled]="savingProfile" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+        @if (savingProfile) { <mat-spinner diameter="20"></mat-spinner> }
+        @else { <mat-icon>save</mat-icon> Guardar Cambios }
+      </button>
+    </div>
+  </div>
+
+  <!-- SEGURIDAD -->
+  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+      <mat-icon class="text-sky-500">lock</mat-icon> Seguridad y Contraseña
+    </h2>
+
+    <div class="space-y-6">
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Contraseña Actual</label>
+        <input type="password" [(ngModel)]="currentPassword" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all" placeholder="••••••••" />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nueva Contraseña</label>
+        <input type="password" [(ngModel)]="newPassword" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all" placeholder="Mínimo 8 caracteres" />
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Confirmar Nueva Contraseña</label>
+        <input type="password" [(ngModel)]="confirmPassword" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all" placeholder="Reintroduce la contraseña" />
+      </div>
+
+      @if (passwordMsg) { <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-1">{{ passwordMsg }}</div> }
+      @if (passwordError) { <div class="p-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-1">{{ passwordError }}</div> }
+
+      <button (click)="savePassword()" [disabled]="savingPassword" class="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+        @if (savingPassword) { <mat-spinner diameter="20"></mat-spinner> }
+        @else { <mat-icon>vpn_key</mat-icon> Actualizar Contraseña }
+      </button>
+    </div>
+  </div>
+</div>

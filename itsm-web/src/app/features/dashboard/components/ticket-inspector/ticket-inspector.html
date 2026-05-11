@@ -1,0 +1,324 @@
+@if (selectedTicket) {
+  <div
+    class="inline-inspector"
+    id="inline-inspector"
+    [class.inspector-fullscreen]="isSmallScreen"
+  >
+    <!-- ── TOOLBAR ──────────────────────────────────────── -->
+    <div class="ins-toolbar">
+      <div class="ins-toolbar-left">
+        @if (isMobile) {
+          <button class="ins-back-btn" (click)="close.emit()">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+        }
+        <div class="ins-toolbar-text">
+          <span class="ins-ticket-title">{{ selectedTicket.title }}</span>
+          <div class="ins-toolbar-meta">
+            <span class="ins-ticket-id">{{
+              selectedTicket.id.slice(0, 8).toUpperCase()
+            }}</span>
+            <span class="p-badge" [ngClass]="getPriorityClass(selectedTicket.priority)">{{
+              selectedTicket.priority
+            }}</span>
+            <span class="ins-status-pill">{{ selectedTicket.status }}</span>
+          </div>
+        </div>
+      </div>
+      @if (!isMobile) {
+        <button class="ins-close-btn" (click)="close.emit()">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <!-- ── NAVEGACIÓN POR PESTAÑAS (solo móvil) ─────────── -->
+    @if (isMobile) {
+      <div class="ins-mobile-tabs">
+        <button
+          class="ins-mob-tab"
+          [class.active]="mobileInspectorTab === 'info'"
+          (click)="mobileInspectorTab = 'info'"
+        >
+          <mat-icon>info_outline</mat-icon> Detalles
+        </button>
+        <button
+          class="ins-mob-tab"
+          [class.active]="mobileInspectorTab === 'attachments'"
+          (click)="mobileInspectorTab = 'attachments'"
+        >
+          <mat-icon>attach_file</mat-icon> Adjuntos
+          @if (attachments.length > 0) {
+            <span class="mob-tab-badge">{{ attachments.length }}</span>
+          }
+        </button>
+        <button
+          class="ins-mob-tab"
+          [class.active]="mobileInspectorTab === 'chat'"
+          (click)="mobileInspectorTab = 'chat'"
+        >
+          <mat-icon>chat_bubble_outline</mat-icon> Chat
+        </button>
+      </div>
+    }
+
+    <!-- ── CUERPO ── -->
+    <div class="ins-body">
+      <!-- COL 1: INFO + GESTIÓN + HISTORIAL -->
+      <div class="ins-col" [class.mob-hidden]="isMobile && mobileInspectorTab !== 'info'">
+        <div class="ins-col-header">
+          <mat-icon>info_outline</mat-icon> Detalles y Gestión
+        </div>
+        <div class="ins-col-scroll">
+          <div class="ins-data-section">
+            <div class="di-row">
+              <span class="di-lbl">Reportado por</span>
+              <span class="di-val">{{ selectedTicket.reportedBy }}</span>
+            </div>
+            <div class="di-row">
+              <span class="di-lbl">Asignado a</span>
+              <span class="di-val">{{ selectedTicket.assignedTo ?? 'Sin asignar' }}</span>
+            </div>
+            <div class="di-row">
+              <span class="di-lbl">Categoría</span>
+              <span class="di-val">{{ selectedTicket.category }}</span>
+            </div>
+            <div class="di-row">
+              <span class="di-lbl">Creado</span>
+              <span class="di-val">{{ selectedTicket.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="di-row di-desc">
+              <span class="di-lbl">Descripción</span>
+              <p class="di-val-p">{{ selectedTicket.description }}</p>
+            </div>
+          </div>
+
+          @if (isAdmin() && !selectedTicket.isClosed) {
+            <div class="ins-action-card">
+              <label class="di-lbl">Reasignar Agente</label>
+              <div class="assign-group">
+                <select class="modern-select" [(ngModel)]="selectedAgentId">
+                  <option value="">— Seleccionar —</option>
+                  @for (a of agents; track a.id) {
+                    <option [value]="a.id">{{ a.name }}</option>
+                  }
+                </select>
+                <button
+                  class="btn-primary-sm"
+                  [disabled]="!selectedAgentId || assigningAgent"
+                  (click)="assignAgent.emit(selectedAgentId)"
+                >
+                  @if (assigningAgent) {
+                    <mat-spinner diameter="14"></mat-spinner>
+                  } @else {
+                    Asignar
+                  }
+                </button>
+              </div>
+            </div>
+          }
+
+          @if (isAdminOrAgent() && !selectedTicket.isClosed) {
+            <div class="ins-action-card">
+              <label class="di-lbl">Avanzar Estado</label>
+              <div class="status-flex">
+                @for (s of nextStatuses(selectedTicket); track s) {
+                  <button
+                    class="btn-status-chip"
+                    (click)="changeStatus.emit({ticket: selectedTicket, status: s})"
+                  >
+                    {{ s }}
+                  </button>
+                }
+                @if (nextStatuses(selectedTicket).length === 0) {
+                  <span class="no-actions">No hay cambios disponibles</span>
+                }
+              </div>
+            </div>
+          }
+
+          @if (auditLogs.length > 0) {
+            <div class="ins-action-card ins-audit">
+              <label class="di-lbl">Historial de cambios</label>
+              <div class="audit-timeline">
+                @for (log of auditLogs; track log.id) {
+                  <div class="audit-entry">
+                    <span
+                      class="audit-dot"
+                      [ngClass]="getAuditDotClass(log.fieldChanged, log.newValue)"
+                    ></span>
+                    <div class="audit-body">
+                      <div class="audit-text">
+                        @if (log.fieldChanged === 'status') {
+                          <span class="audit-icon-text"
+                            >Estado: <strong>{{ log.oldValue ?? '—' }}</strong></span
+                          >
+                          <span class="audit-arrow">→</span>
+                          <span
+                            class="audit-badge"
+                            [ngClass]="getAuditBadgeClass(log.newValue)"
+                            >{{ log.newValue }}</span
+                          >
+                        } @else {
+                          <span class="audit-icon-text">
+                            <strong>{{ log.fieldChanged }}</strong>: {{ log.oldValue ?? '—' }} → {{ log.newValue }}
+                          </span>
+                        }
+                      </div>
+                      <div class="audit-meta">
+                        <mat-icon style="font-size: 12px; width: 12px; height: 12px">person</mat-icon>
+                        {{ log.changedBy }} · {{ log.createdAt | date: 'dd-MM-yyyy HH:mm' }}
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- COL 2: ADJUNTOS -->
+      <div
+        class="ins-col"
+        [class.mob-hidden]="isMobile && mobileInspectorTab !== 'attachments'"
+      >
+        <div class="ins-col-header">
+          <mat-icon>attach_file</mat-icon> Adjuntos
+          @if (attachments.length > 0) {
+            <span class="ins-col-badge">{{ attachments.length }}</span>
+          }
+        </div>
+        <div class="ins-col-scroll">
+          @if (!selectedTicket.isClosed) {
+            <div class="ins-upload-zone">
+              <div class="ins-upload-btns">
+                <button class="up-btn file" (click)="fileInput.click()">
+                  <mat-icon>add_to_photos</mat-icon> Archivo
+                </button>
+                <button class="up-btn camera" (click)="cameraInput.click()">
+                  <mat-icon>photo_camera</mat-icon> Cámara
+                </button>
+              </div>
+              <input
+                #fileInput
+                type="file"
+                style="display: none"
+                accept="image/*,.pdf,.doc,.docx"
+                (change)="fileSelected.emit($event)"
+              />
+              <input
+                #cameraInput
+                type="file"
+                style="display: none"
+                accept="image/*"
+                capture="environment"
+                (change)="fileSelected.emit($event)"
+              />
+            </div>
+
+            @if (pendingFile) {
+              <div class="ins-pending-card">
+                <div class="pending-top">
+                  <mat-icon>insert_drive_file</mat-icon>
+                  <span class="p-name">{{ pendingFile.name }}</span>
+                </div>
+                <input
+                  class="p-input"
+                  [ngModel]="pendingDescription"
+                  (ngModelChange)="onPendingDescChange($event)"
+                  placeholder="Nota opcional..."
+                />
+                <div class="p-actions">
+                  <button
+                    class="p-btn-up"
+                    (click)="uploadFile.emit()"
+                    [disabled]="uploadingAttachment"
+                  >
+                    @if (uploadingAttachment) {
+                      <mat-spinner diameter="14"></mat-spinner>
+                    } @else {
+                      Subir
+                    }
+                  </button>
+                  <button class="p-btn-cancel" (click)="cancelPending.emit()">Cancelar</button>
+                </div>
+              </div>
+            }
+          }
+
+          <div class="ins-attachments-grid">
+            @for (att of attachments; track att.id) {
+              <div class="ins-att-item">
+                <div class="att-thumb" (click)="previewAttachment.emit(att)">
+                  @if (att.isImage) {
+                    <!-- This would need a pipe or a way to get the URL -->
+                    <mat-icon>image</mat-icon>
+                  } @else {
+                    <mat-icon>description</mat-icon>
+                  }
+                </div>
+                <div class="att-info">
+                  <span class="name">{{ att.originalName }}</span>
+                  <span class="meta">{{ att.uploadedBy }} · {{ att.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+                </div>
+                @if (isAdmin() || (user && user.id === att.uploadedById)) {
+                  <button
+                    class="att-del"
+                    (click)="deleteAttachment.emit(att)"
+                    [disabled]="deletingAttachmentId === att.id"
+                  >
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- COL 3: CHAT -->
+      <div
+        class="ins-col col-chat"
+        [class.mob-hidden]="isMobile && mobileInspectorTab !== 'chat'"
+      >
+        <div class="ins-col-header">
+          <mat-icon>chat_bubble_outline</mat-icon> Chat de Resolución
+        </div>
+
+        <div class="ins-chat-scroll" #chatContainer>
+          @if (loadingComments) {
+            <div class="loading-center"><mat-spinner diameter="32"></mat-spinner></div>
+          }
+          @for (msg of comments; track msg.id) {
+            <div class="ins-msg" [class.ins-msg-mine]="msg.isOwn">
+              <div class="ins-bubble">{{ msg.content }}</div>
+              <div class="ins-msg-meta">{{ msg.authorName }} · {{ msg.createdAt | date: 'dd-MM-yyyy HH:mm' }}</div>
+            </div>
+          }
+        </div>
+
+        @if (!selectedTicket.isClosed) {
+          <div class="ins-chat-input-area">
+            <textarea
+              [(ngModel)]="newComment"
+              placeholder="Escribir mensaje…"
+              (keydown.control.enter)="onSendComment()"
+            ></textarea>
+            <button
+              class="ins-btn-send"
+              [disabled]="!newComment.trim() || sendingComment"
+              (click)="onSendComment()"
+            >
+              @if (sendingComment) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                <mat-icon>send</mat-icon>
+              }
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

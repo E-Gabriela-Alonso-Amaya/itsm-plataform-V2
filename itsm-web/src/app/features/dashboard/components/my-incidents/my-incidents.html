@@ -1,0 +1,66 @@
+<div class="view-header">
+  <div>
+    <h1 class="view-title">Historial de Incidencias</h1>
+  </div>
+</div>
+
+@if (loading) {
+  <div class="loading-center">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+} @else if (incidentsOpen.length === 0 && incidentsResolved.length === 0) {
+  <div class="empty-state">
+    <mat-icon>history</mat-icon>
+    <p>No hay historial de incidencias.</p>
+  </div>
+} @else {
+  <div class="table-container">
+    <table class="classic-table">
+      <thead>
+        <tr>
+          <th>Estado</th>
+          <th>Título</th>
+          <th>Categoría</th>
+          <th>Prioridad</th>
+          <th>Fecha</th>
+          <th>Asignado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ACTIVAS -->
+        @for (t of incidentsOpen; track t.id) {
+          <tr class="clickable-row" (click)="openTicket.emit(t)">
+            <td>
+              <span class="status-badge" [attr.data-status]="t.status">{{ t.status }}</span>
+            </td>
+            <td class="font-bold">
+              {{ t.title }}
+              @if (hasUnreadComments(t.id)) { <span class="unread-dot"></span> }
+            </td>
+            <td>{{ t.category }}</td>
+            <td>
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            </td>
+            <td class="text-xs">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
+            <td class="text-xs">{{ t.assignedTo || '---' }}</td>
+          </tr>
+        }
+        <!-- RESUELTAS -->
+        @for (t of incidentsResolved; track t.id) {
+          <tr class="clickable-row resolved-row" (click)="openTicket.emit(t)">
+            <td>
+              <span class="status-badge" data-status="Resuelto">Resuelto</span>
+            </td>
+            <td class="text-slate-500">{{ t.title }}</td>
+            <td>{{ t.category }}</td>
+            <td>
+              <span class="p-badge opacity-50" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            </td>
+            <td class="text-xs">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
+            <td class="text-xs">{{ t.assignedTo || '---' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

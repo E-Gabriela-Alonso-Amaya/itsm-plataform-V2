@@ -1,0 +1,223 @@
+<div class="app-shell">
+  <!-- CABECERA -->
+  <app-topbar
+    [user]="user"
+    [userInitials]="userInitials"
+    [activeView]="activeView"
+    [isAdmin]="isAdmin()"
+    [isAgent]="isAgent()"
+    (toggleSidebar)="toggleSidebar()"
+    (logout)="logout()"
+    (setView)="onSidebarSetView($event)"
+  >
+  </app-topbar>
+
+  <div class="app-body">
+    <!-- SIDEBAR (MENÚ LATERAL DE EMPRESAS) -->
+    <app-sidebar
+      [activeCompanyId]="selectedCompany"
+      [sidebarOpen]="sidebarOpen"
+      (setCompany)="onSetCompany($event)"
+      (closeSidebar)="closeSidebar()"
+    >
+    </app-sidebar>
+
+    <!-- MAIN -->
+    <main class="main-content">
+      <app-status-message [success]="successMsg" [error]="errorMsg"></app-status-message>
+
+      @if (activeView === 'loading') {
+        <div class="flex flex-col items-center justify-center h-[60vh] gap-4">
+          <mat-spinner diameter="40"></mat-spinner>
+          <span class="text-slate-400 text-sm font-medium animate-pulse">Cargando sistema...</span>
+        </div>
+      } @else {
+        <!-- VISTA: MI TRABAJO (AGENTE) -->
+        @if (activeView === 'agent_work') {
+          <app-agent-work
+            [user]="user"
+            [agentStats]="agentStats"
+            [colAvailable]="colAvailable"
+            [colMine]="colMine"
+            [colInProgress]="colInProgress"
+            [colWaiting]="colWaiting"
+            [colDone]="colDone"
+            (openDrawer)="openDrawer($event)"
+            (assign)="assign($event)"
+            (updateStatus)="changeTicketStatus($event.ticket, $event.status)"
+          ></app-agent-work>
+        }
+
+        <!-- VISTA: MIS TICKETS (HISTÓRICO AGENTE) -->
+        @if (activeView === 'agent_history') {
+          <app-agent-history
+            [tickets]="myCreatedTickets"
+            (openDrawer)="openDrawer($event)"
+            (goToCreate)="goToCreate()"
+          ></app-agent-history>
+        }
+
+        <!-- VISTA: ADMIN PANEL -->
+        @if (activeView.startsWith('admin_')) {
+          <app-admin-panel [subView]="activeView"></app-admin-panel>
+        }
+
+        <!-- VISTA: DASHBOARD -->
+        @if (activeView === 'dashboard') {
+          <app-dashboard-header [name]="user?.name || ''" [date]="today"></app-dashboard-header>
+
+          <!-- DASHBOARD EMPLEADO -->
+          @if (isEmployee()) {
+            <app-employee-dashboard
+              [incidentsOpen]="incidentsOpen"
+              [incidentsResolved]="incidentsResolved"
+              [allMyIncidents]="allMyIncidents"
+              [loadingList]="loadingList"
+              [hasUnreadComments]="hasUnreadComments.bind(this)"
+              [hasComments]="hasComments.bind(this)"
+              (openDrawer)="openDrawer($event)"
+              (goToCreate)="goToCreate()"
+              (rateTicket)="onRateTicket($event)"
+            ></app-employee-dashboard>
+          }
+
+          <!-- DASHBOARD GLOBAL (ADMIN) -->
+          @if (isAdmin()) {
+            <app-admin-dashboard
+              [selectedCompany]="selectedCompany"
+              [totalIncidents]="totalIncidents"
+              [globalStats]="globalStats"
+              [allCompanyIncidents]="queueIncidents"
+              [adminDashboardTab]="adminDashboardTab"
+              [filterPriority]="filterPriority"
+              [filterCategory]="filterCategory"
+              [priorities]="priorities"
+              [categories]="categories"
+              [isMobile]="isMobile"
+              [activeKanbanTab]="activeKanbanTab"
+              [agents]="agents"
+              [assignDropdownId]="assignDropdownId"
+              [assigningId]="assigningId"
+              [selectedTicket]="selectedTicket"
+              [colNew]="colNew"
+              [colAssignedPanel]="colAssignedPanel"
+              [colProcessingPanel]="colProcessingPanel"
+              [colWaitingPanel]="colWaitingPanel"
+              [colDonePanel]="colDonePanel"
+              [colAdminAssigned]="colAdminAssigned"
+              [colAdminProgress]="colAdminProgress"
+              [colAdminWaiting]="colAdminWaiting"
+              [colAdminDone]="colAdminDone"
+              [currentUserId]="user?.id || ''"
+              [currentUserRole]="user?.roles?.[0] || ''"
+              (setDashboardTab)="adminDashboardTab = $event"
+              (loadQueue)="loadQueue()"
+              (clearFilters)="clearFilters()"
+              (setKanbanTab)="activeKanbanTab = $event"
+              (openDrawer)="openDrawer($event)"
+              (assignToMe)="assign($event)"
+              (toggleAssignDropdown)="toggleAssignDropdown($event)"
+              (quickAssignToAgent)="quickAssignToAgent($event.ticket, $event.agentId)"
+              (updateStatus)="changeTicketStatus($event.ticket, $event.status)"
+              (goToCreate)="goToCreate()"
+            ></app-admin-dashboard>
+          }
+        }
+
+        <!-- VISTA: PERFIL -->
+        @if (activeView === 'profile') {
+          <app-profile [user]="user"></app-profile>
+        }
+
+        <!-- VISTA: TODOS LOS TICKETS -->
+        @if (activeView === 'all') {
+          <app-all-incidents
+            [incidents]="incidents"
+            [categories]="categories"
+            [priorities]="priorities"
+            [agents]="agents"
+            (open)="openDrawer($event)"
+          ></app-all-incidents>
+        }
+
+        <!-- VISTA: MIS TICKETS (EMPLEADO) -->
+        @if (activeView === 'mine') {
+          <app-my-incidents
+            [incidentsOpen]="incidentsOpen"
+            [incidentsResolved]="incidentsResolved"
+            (openTicket)="openDrawer($event)"
+          ></app-my-incidents>
+        }
+
+        <!-- INSPECTOR DE TICKETS (COMPARTIDO ADMIN/AGENTE) -->
+        @if (drawerOpen && selectedTicket && isAdminOrAgent()) {
+          <app-ticket-inspector
+            [selectedTicket]="selectedTicket"
+            [user]="user"
+            [agents]="agents"
+            [attachments]="attachments"
+            [comments]="comments"
+            [auditLogs]="auditLogs"
+            [loadingComments]="loadingComments"
+            [loadingAttachments]="loadingAttachments"
+            [sendingComment]="sendingComment"
+            [uploadingAttachment]="uploadingAttachment"
+            [assigningAgent]="assigningAgent"
+            [deletingAttachmentId]="deletingAttachmentId"
+            [isMobile]="isMobile"
+            [isSmallScreen]="isSmallScreen"
+            [pendingFile]="pendingFile"
+            [pendingDescription]="pendingDescription"
+            (close)="closeDrawer()"
+            (changeStatus)="changeTicketStatus($event.ticket, $event.status)"
+            (assignAgent)="assignToAgent($event)"
+            (sendComment)="sendComment($event)"
+            (fileSelected)="onFileSelected($event)"
+            (uploadFile)="uploadAttachment()"
+            (cancelPending)="cancelPending()"
+            (deleteAttachment)="deleteAttachment($event)"
+            (previewAttachment)="openAttachmentPreview($event)"
+            (pendingDescriptionChange)="pendingDescription = $event"
+          ></app-ticket-inspector>
+        }
+
+        <!-- DRAWER PARA EMPLEADOS (OVERLAY) -->
+        @if (drawerOpen && selectedTicket && isEmployee()) {
+          <app-drawer-employee
+            [drawerOpen]="drawerOpen"
+            [selectedTicket]="selectedTicket"
+            [user]="user"
+            [comments]="comments"
+            [loadingComments]="loadingComments"
+            [newComment]="newComment"
+            [sendingComment]="sendingComment"
+            [attachments]="attachments"
+            [pendingFile]="pendingFile"
+            [pendingDescription]="pendingDescription"
+            [uploadingAttachment]="uploadingAttachment"
+            [getPriorityClass]="getPriorityClass.bind(this)"
+            [getAttachmentUrl]="getAttachmentUrl.bind(this)"
+            [isEmployee]="isEmployee.bind(this)"
+            (closeDrawer)="closeDrawer()"
+            (sendComment)="sendComment()"
+            (newCommentChange)="newComment = $event"
+            (onFileSelected)="onFileSelected($event)"
+            (uploadAttachment)="uploadAttachment()"
+            (cancelPending)="cancelPending()"
+            (pendingDescriptionChange)="pendingDescription = $event"
+            (openAttachmentPreview)="openAttachmentPreview($event)"
+          ></app-drawer-employee>
+        }
+      }
+    </main>
+  </div>
+
+  <!-- LIGHTBOX -->
+  @if (previewAttachment) {
+    <app-lightbox
+      [previewAttachment]="previewAttachment"
+      [getAttachmentUrl]="getAttachmentUrl.bind(this)"
+      (close)="previewAttachment = null"
+    ></app-lightbox>
+  }
+</div>

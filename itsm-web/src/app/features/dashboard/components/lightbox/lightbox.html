@@ -1,0 +1,18 @@
+@if (previewAttachment) {
+<div class="lightbox-overlay" (click)="close.emit()">
+  <div class="lightbox-content" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="close.emit()"><mat-icon>close</mat-icon></button>
+    @if (previewAttachment.isImage) {
+    <img [src]="getAttachmentUrl(previewAttachment.id || '') | secureImage | async" class="img-full">
+    } @else {
+    <div class="no-preview">
+      <mat-icon>insert_drive_file</mat-icon>
+      <p>Este archivo no se puede previsualizar.
+        <a [href]="getAttachmentUrl(previewAttachment.id)" target="_blank">Descargar</a>
+      </p>
+    </div>
+    }
+    <div class="lightbox-caption">{{ previewAttachment.originalName }}</div>
+  </div>
+</div>
+}

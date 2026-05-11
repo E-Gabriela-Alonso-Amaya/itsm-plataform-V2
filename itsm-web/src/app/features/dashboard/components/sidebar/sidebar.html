@@ -1,0 +1,37 @@
+<aside class="sidebar company-sidebar" [class.open]="sidebarOpen" *ngIf="companies.length > 0">
+  <div class="company-list">
+
+    @for (company of companies; track company.id) {
+    <div 
+      class="company-item" 
+      [class.active]="activeCompanyId === company.id"
+      (click)="selectCompany(company.id)"
+      [title]="company.name"
+    >
+      <div class="company-icon-circle" [style.background-color]="activeCompanyId === company.id ? '#e0f2fe' : 'transparent'">
+        @if (company.logoUrl) {
+          <img [src]="company.logoUrl" class="company-logo-img" />
+        } @else {
+          <mat-icon>{{ company.id === 'global' ? 'public' : 'web_asset' }}</mat-icon>
+        }
+      </div>
+      <span class="company-name">{{ company.name }}</span>
+
+      <!-- INDICADORES DE NOTIFICACIÓN -->
+      <div class="company-notifications">
+        @if (getNewCount(company.id) > 0) {
+          <span class="notif-dot dot-new" [title]="getNewCount(company.id) + ' nuevos'"></span>
+        }
+        @if (getAssignedCount(company.id) > 0) {
+          <span class="notif-dot dot-assigned" [title]="getAssignedCount(company.id) + ' asignados'"></span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</aside>
+
+<!-- Overlay para cerrar sidebar en móvil -->
+@if (sidebarOpen) {
+<div class="sidebar-overlay" (click)="closeSidebar.emit()"></div>
+}

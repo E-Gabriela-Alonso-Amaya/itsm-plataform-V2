@@ -1,0 +1,328 @@
+<!-- ============================
+     VISTA: TODAS LAS INCIDENCIAS
+     ============================ -->
+
+<div class="view-header">
+  <div class="view-header-left">
+    <h1 class="view-title">Todas las incidencias</h1>
+    <p class="view-sub">Busca, filtra y gestiona el historial completo</p>
+  </div>
+  <div class="view-header-right">
+    <span class="results-badge" *ngIf="hasSearched">
+      <mat-icon>confirmation_number</mat-icon>
+      {{ incidents.length }} resultado{{ incidents.length !== 1 ? 's' : '' }}
+    </span>
+  </div>
+</div>
+
+<!-- ============================
+     FILTROS
+     ============================ -->
+<div class="filters-panel">
+
+  <div class="filters-panel-header">
+    <span class="filters-panel-title">
+      <mat-icon>tune</mat-icon> Filtros de búsqueda
+    </span>
+    <button class="btn-reset" (click)="clearAllFilters()" *ngIf="hasActiveFilters()">
+      <mat-icon>restart_alt</mat-icon> Limpiar todo
+    </button>
+  </div>
+
+  <div class="filters-grid">
+
+    <!-- BLOQUE: FECHAS -->
+    <div class="filter-group">
+      <span class="filter-group-label">
+        <mat-icon>calendar_today</mat-icon> Período
+      </span>
+      <div class="date-range-row">
+        <div class="date-field-wrap">
+          <label class="date-label">Desde</label>
+          <div class="date-input-box" (click)="pickerFrom.open()">
+            <mat-icon class="date-icon">event</mat-icon>
+            <span class="date-value" [class.placeholder]="!filterFrom">
+              {{ filterFrom ? formatDate(filterFrom) : 'dd/mm/aaaa' }}
+            </span>
+            <button class="date-clear" *ngIf="filterFrom" (click)="$event.stopPropagation(); filterFrom=null; applyFilters()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <mat-form-field class="hidden-picker">
+            <input matInput [matDatepicker]="pickerFrom" [(ngModel)]="filterFrom" (dateChange)="applyFilters()">
+            <mat-datepicker #pickerFrom></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <span class="date-separator">—</span>
+
+        <div class="date-field-wrap">
+          <label class="date-label">Hasta</label>
+          <div class="date-input-box" (click)="pickerTo.open()">
+            <mat-icon class="date-icon">event</mat-icon>
+            <span class="date-value" [class.placeholder]="!filterTo">
+              {{ filterTo ? formatDate(filterTo) : 'dd/mm/aaaa' }}
+            </span>
+            <button class="date-clear" *ngIf="filterTo" (click)="$event.stopPropagation(); filterTo=null; applyFilters()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <mat-form-field class="hidden-picker">
+            <input matInput [matDatepicker]="pickerTo" [(ngModel)]="filterTo" (dateChange)="applyFilters()">
+            <mat-datepicker #pickerTo></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOQUE: PRIORIDAD + CATEGORÍA -->
+    <div class="filter-group">
+      <span class="filter-group-label">
+        <mat-icon>label</mat-icon> Clasificación
+      </span>
+      <div class="select-row">
+        <div class="custom-select-wrap">
+          <label class="select-label">Prioridad</label>
+          <select class="custom-select" [(ngModel)]="filterPriority">
+            <option value="">Todas</option>
+            <option *ngFor="let p of priorities" [value]="p.name">{{ p.name }}</option>
+          </select>
+          <mat-icon class="select-arrow">expand_more</mat-icon>
+        </div>
+        <div class="custom-select-wrap">
+          <label class="select-label">Categoría</label>
+          <select class="custom-select" [(ngModel)]="filterCategory">
+            <option value="">Todas</option>
+            <option *ngFor="let c of categories" [value]="c.name">{{ c.name }}</option>
+          </select>
+          <mat-icon class="select-arrow">expand_more</mat-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOQUE: ESTADO + AGENTE + EMPLEADO -->
+    <div class="filter-group">
+      <span class="filter-group-label">
+        <mat-icon>manage_accounts</mat-icon> Personas y estado
+      </span>
+      <div class="select-row select-row-3">
+        <div class="custom-select-wrap">
+          <label class="select-label">Estado</label>
+          <select class="custom-select" [(ngModel)]="filterStatus">
+            <option value="">Todos</option>
+            <option *ngFor="let s of statuses" [value]="s.name">{{ s.name }}</option>
+          </select>
+          <mat-icon class="select-arrow">expand_more</mat-icon>
+        </div>
+        @if (user.roles.includes('ROLE_ADMIN')) {
+        <div class="custom-select-wrap">
+          <label class="select-label">Agente</label>
+          <select class="custom-select" [(ngModel)]="filterAgent">
+            <option value="">Todos</option>
+            <option *ngFor="let a of agents" [value]="a.name">{{ a.name }}</option>
+          </select>
+          <mat-icon class="select-arrow">expand_more</mat-icon>
+        </div>
+        <div class="custom-select-wrap">
+          <label class="select-label">Empleado</label>
+          <select class="custom-select" [(ngModel)]="filterEmployee">
+            <option value="">Todos</option>
+            <option *ngFor="let u of users" [value]="u.name">{{ u.name }}</option>
+          </select>
+          <mat-icon class="select-arrow">expand_more</mat-icon>
+        </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER PANEL: BOTÓN APLICAR -->
+  <div class="filters-footer">
+    <div class="active-filters-summary" *ngIf="hasActiveFilters()">
+      <span class="active-tag" *ngIf="filterFrom || filterTo">
+        <mat-icon>date_range</mat-icon>
+        {{ filterFrom ? formatDate(filterFrom) : '∞' }} → {{ filterTo ? formatDate(filterTo) : '∞' }}
+        <button (click)="filterFrom=null; filterTo=null; applyFilters()"><mat-icon>close</mat-icon></button>
+      </span>
+      <span class="active-tag" *ngIf="filterPriority">
+        {{ filterPriority }}
+        <button (click)="filterPriority=''; applyFilters()"><mat-icon>close</mat-icon></button>
+      </span>
+      <span class="active-tag" *ngIf="filterCategory">
+        {{ filterCategory }}
+        <button (click)="filterCategory=''; applyFilters()"><mat-icon>close</mat-icon></button>
+      </span>
+      <span class="active-tag" *ngIf="filterStatus">
+        {{ filterStatus }}
+        <button (click)="filterStatus=''; applyFilters()"><mat-icon>close</mat-icon></button>
+      </span>
+      <span class="active-tag" *ngIf="filterAgent">
+        {{ filterAgent }}
+        <button (click)="filterAgent=''; applyFilters()"><mat-icon>close</mat-icon></button>
+      </span>
+      <span class="active-tag" *ngIf="filterEmployee">
+        {{ filterEmployee }}
+        <button (click)="filterEmployee=''; applyFilters()"><mat-icon>close</mat-icon></button>
+      </span>
+    </div>
+    <button class="btn-apply" (click)="search()">
+      <mat-icon>search</mat-icon>
+      Aplicar filtros
+    </button>
+  </div>
+</div>
+
+<!-- ============================
+     TABLA (solo si hasSearched)
+     ============================ -->
+@if (hasSearched) {
+
+@if (incidents.length === 0) {
+<div class="empty-results">
+  <mat-icon>search_off</mat-icon>
+  <p>No se encontraron incidencias con los filtros aplicados</p>
+  <button class="btn-reset-empty" (click)="clearAllFilters()">Limpiar filtros</button>
+</div>
+} @else {
+
+<div class="table-card">
+  <table mat-table [dataSource]="incidents" class="full-width">
+
+    <ng-container matColumnDef="title">
+      <th mat-header-cell *matHeaderCellDef>Título</th>
+      <td mat-cell *matCellDef="let i">
+        <span class="td-title">{{ i.title }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="category">
+      <th mat-header-cell *matHeaderCellDef>Categoría</th>
+      <td mat-cell *matCellDef="let i">
+        <span class="td-category">{{ i.category }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="priority">
+      <th mat-header-cell *matHeaderCellDef>Prioridad</th>
+      <td mat-cell *matCellDef="let i">
+        <span class="p-badge" [ngClass]="getPriorityClass(i.priority)">{{ i.priority }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Estado</th>
+      <td mat-cell *matCellDef="let i">
+        <span class="td-status" [attr.data-status]="i.status">{{ i.status }}</span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="reportedBy">
+      <th mat-header-cell *matHeaderCellDef>Reportado por</th>
+      <td mat-cell *matCellDef="let i">{{ i.reportedBy }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="assignedTo">
+      <th mat-header-cell *matHeaderCellDef>Asignado a</th>
+      <td mat-cell *matCellDef="let i">
+        <span class="td-agent" *ngIf="i.assignedTo; else unassigned">{{ i.assignedTo }}</span>
+        <ng-template #unassigned><span class="td-unassigned">—</span></ng-template>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Fecha</th>
+      <td mat-cell *matCellDef="let i">
+        <span class="td-date">{{ i.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row
+        *matRowDef="let row; columns: displayedColumns;"
+        class="clickable-row"
+        [class.row-selected]="selectedTicket?.id === row.id"
+        (click)="openDrawer(row)">
+    </tr>
+  </table>
+</div>
+
+}
+
+<!-- ============================
+     INSPECTOR
+     ============================ -->
+@if (drawerOpen && selectedTicket) {
+<div class="all-ticket-panel" id="inline-inspector">
+
+  <div class="atp-header">
+    <div class="atp-header-left">
+      <span class="ins-ticket-id">{{ selectedTicket!.id.slice(0,8).toUpperCase() }}</span>
+      <span class="atp-title">{{ selectedTicket!.title }}</span>
+      <span class="p-badge" [ngClass]="getPriorityClass(selectedTicket!.priority)">{{ selectedTicket!.priority }}</span>
+      <span class="ins-status-pill">{{ selectedTicket!.status }}</span>
+    </div>
+    <button class="atp-close" (click)="closeDrawer()">
+      <mat-icon>close</mat-icon> Cerrar informe
+    </button>
+  </div>
+
+  <div class="ins-body">
+    <div class="ins-col">
+      <div class="ins-col-header"><mat-icon>info_outline</mat-icon> Detalles y Gestión</div>
+      <div class="ins-col-scroll">
+        <div class="ins-data-section">
+          <div class="di-row"><span class="di-lbl">Reportado por</span><span class="di-val">{{ selectedTicket!.reportedBy }}</span></div>
+          <div class="di-row"><span class="di-lbl">Asignado a</span><span class="di-val">{{ selectedTicket!.assignedTo ?? 'Sin asignar' }}</span></div>
+          <div class="di-row"><span class="di-lbl">Categoría</span><span class="di-val">{{ selectedTicket!.category }}</span></div>
+          <div class="di-row"><span class="di-lbl">Creado</span><span class="di-val">{{ selectedTicket!.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span></div>
+          <div class="di-row di-desc">
+            <span class="di-lbl">Descripción</span>
+            <p class="di-val-p">{{ selectedTicket!.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ins-col">
+      <div class="ins-col-header"><mat-icon>attach_file</mat-icon> Adjuntos</div>
+      <div class="ins-col-scroll">
+        <div class="ins-attachments-grid">
+          @for (att of selectedTicket!.attachments ?? []; track att.id) {
+          <div class="ins-att-item">
+            <div class="att-thumb">
+              @if (att.isImage) { <img [src]="getAttachmentUrl(att.id) | secureImage | async" /> }
+              @else { <mat-icon>description</mat-icon> }
+            </div>
+            <div class="att-info">
+              <span class="name">{{ att.originalName }}</span>
+              <span class="meta">{{ att.uploadedBy }}</span>
+            </div>
+          </div>
+          }
+          @if ((selectedTicket!.attachments ?? []).length === 0) {
+          <div class="att-empty">Sin adjuntos.</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="ins-col col-chat">
+      <div class="ins-col-header"><mat-icon>chat_bubble_outline</mat-icon> Chat</div>
+      <div class="ins-chat-scroll">
+        @for (msg of selectedTicket!.comments ?? []; track msg.id) {
+        <div class="ins-msg" [class.ins-msg-mine]="msg.authorId === user.id">
+          <div class="ins-bubble">{{ msg.content }}</div>
+          <div class="ins-msg-meta">{{ msg.authorName }} · {{ msg.createdAt | date: 'dd-MM-yyyy HH:mm' }}</div>
+        </div>
+        }
+        @if ((selectedTicket!.comments ?? []).length === 0) {
+        <div class="ins-chat-empty">No hay mensajes.</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+}<!-- /hasSearched -->

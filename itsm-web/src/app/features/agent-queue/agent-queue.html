@@ -1,0 +1,148 @@
+<mat-toolbar class="toolbar">
+  <span class="toolbar-title">
+    <mat-icon>support_agent</mat-icon>
+    Cola de Trabajo
+  </span>
+  <span class="spacer"></span>
+  <button mat-button (click)="goToDashboard()">
+    <mat-icon>dashboard</mat-icon> Dashboard
+  </button>
+  <button mat-button (click)="logout()">
+    <mat-icon>logout</mat-icon> Salir
+  </button>
+</mat-toolbar>
+
+<div class="queue-container">
+
+  <!-- CABECERA CON CONTADORES -->
+  <div class="queue-header">
+    <div class="stat-card">
+      <span class="stat-number">{{ incidents.length }}</span>
+      <span class="stat-label">Total activos</span>
+    </div>
+    <div class="stat-card warn">
+      <span class="stat-number">{{ unassignedCount }}</span>
+      <span class="stat-label">Sin asignar</span>
+    </div>
+    <div class="stat-card success">
+      <span class="stat-number">{{ myTicketsCount }}</span>
+      <span class="stat-label">Mis tickets</span>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filters-bar">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Prioridad</mat-label>
+      <mat-select [(ngModel)]="filterPriority" (selectionChange)="applyFilters()">
+        <mat-option value="">Todas</mat-option>
+        @for (p of priorities; track p.id) {
+          <mat-option [value]="p.name">{{ p.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Categoría</mat-label>
+      <mat-select [(ngModel)]="filterCategory" (selectionChange)="applyFilters()">
+        <mat-option value="">Todas</mat-option>
+        @for (c of categories; track c.id) {
+          <mat-option [value]="c.name">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Asignación</mat-label>
+      <mat-select [(ngModel)]="filterAssigned" (selectionChange)="applyFilters()">
+        <mat-option value="all">Todos</mat-option>
+        <mat-option value="unassigned">Sin asignar</mat-option>
+        <mat-option value="me">Mis tickets</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-stroked-button (click)="clearFilters()" class="clear-btn">
+      <mat-icon>clear</mat-icon> Limpiar
+    </button>
+  </div>
+
+  <!-- MENSAJES -->
+  @if (successMsg) {
+    <div class="msg-success">{{ successMsg }}</div>
+  }
+  @if (error) {
+    <div class="msg-error">{{ error }}</div>
+  }
+
+  <!-- LOADING -->
+  @if (loading) {
+    <div class="loading-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Cargando cola de trabajo...</p>
+    </div>
+  }
+
+  <!-- LISTA DE TICKETS -->
+  @if (!loading) {
+    @if (incidents.length === 0) {
+      <div class="empty-state">
+        <mat-icon>check_circle</mat-icon>
+        <p>No hay tickets pendientes con los filtros actuales.</p>
+      </div>
+    } @else {
+      <div class="tickets-grid">
+        @for (ticket of incidents; track ticket.id) {
+          <div class="ticket-card" [class.is-mine]="isAssignedToMe(ticket)">
+
+            <div class="ticket-header">
+              <span class="priority-badge" [ngClass]="getPriorityClass(ticket.priority)">
+                {{ ticket.priority }}
+              </span>
+              <span class="ticket-category">{{ ticket.category }}</span>
+              <span class="ticket-date">{{ ticket.createdAt }}</span>
+            </div>
+
+            <div class="ticket-body">
+              <h3 class="ticket-title">{{ ticket.title }}</h3>
+              <p class="ticket-reported">Reportado por: <strong>{{ ticket.reportedBy }}</strong></p>
+            </div>
+
+            <div class="ticket-footer">
+              <div class="ticket-status">
+                <mat-icon class="status-icon">
+                  {{ ticket.assignedTo ? 'person' : 'person_outline' }}
+                </mat-icon>
+                <span [class.unassigned]="!ticket.assignedTo">
+                  {{ ticket.assignedTo ?? 'Sin asignar' }}
+                </span>
+              </div>
+
+              @if (!isAssignedToMe(ticket)) {
+                <button
+                  mat-flat-button
+                  class="assign-btn"
+                  [disabled]="assigningId === ticket.id"
+                  (click)="assign(ticket)">
+                  @if (assigningId === ticket.id) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <ng-container>
+                        <mat-icon>assignment_ind</mat-icon>
+                        Asumir
+                    </ng-container>
+                    }
+                </button>
+              } @else {
+                <span class="mine-badge">
+                  <mat-icon>check_circle</mat-icon> Asignado a mí
+                </span>
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+    }
+  }
+
+</div>

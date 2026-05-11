@@ -1,0 +1,160 @@
+<div class="ap-shell">
+  
+  <header class="ap-header px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div class="ap-header-left">
+      <button class="ap-btn-icon" (click)="cancel()" title="Volver">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="ap-header-icon-box bg-blue-50 text-blue-600 p-2 rounded-lg ml-2">
+        <mat-icon class="ap-header-icon">add_task</mat-icon>
+      </div>
+      <div class="ml-1">
+        <h1 class="ap-title">Nueva Incidencia</h1>
+        <p class="ap-sub">Rellena los campos para que un agente pueda ayudarte.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="ap-content p-6 max-w-4xl mx-auto">
+    
+    @if (error) {
+      <div class="ap-msg-error mb-6">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+    }
+
+    <div class="ap-form-card shadow-sm bg-white p-8 border border-slate-200 rounded-2xl">
+      
+      <div class="ap-field mb-6">
+        <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Título de la incidencia <span class="req text-red-500">*</span></label>
+        <input  class="ap-input w-full p-3 border border-slate-200 rounded-xl min-h-[50px] focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all resize-none" 
+               [(ngModel)]="title" 
+               placeholder="Describe brevemente el problema (mínimo 5 caracteres)" />
+        <p class="ap-form-hint flex items-center gap-1 text-xs text-slate-400 mt-2">
+          <mat-icon class="text-sm w-4 h-4">info</mat-icon> 
+          Un título claro ayuda a los técnicos a identificar el problema más rápido.
+        </p>
+      </div>
+
+      <div class="ap-field mb-6">
+        <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Descripción Detallada <span class="req text-red-500">*</span></label>
+        <textarea class="ap-input w-full p-3 border border-slate-200 rounded-xl min-h-[140px] focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all resize-none" 
+                  [(ngModel)]="description" 
+                  placeholder="Explica con detalle el problema, cuándo ocurrió y cualquier información relevante (mínimo 10 caracteres)"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="ap-field">
+          <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Categoría <span class="req text-red-500">*</span></label>
+          <select class="ap-select w-full p-3 border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all cursor-pointer" 
+                  [(ngModel)]="categoryId">
+            <option [value]="null" disabled selected>— Selecciona una categoría —</option>
+            @for (c of categories; track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+
+        @if (isAdmin || isAgent) {
+          <div class="ap-field">
+            <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Prioridad <span class="req text-red-500">*</span></label>
+            <select class="ap-select w-full p-3 border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all cursor-pointer" 
+                    [(ngModel)]="priorityId">
+              <option [value]="null" disabled selected>— Selecciona la prioridad —</option>
+              @for (p of priorities; track p.id) {
+                <option [value]="p.id">{{ p.name }}</option>
+              }
+            </select>
+          </div>
+        }
+      </div>
+      
+      <!-- ADJUNTOS -->
+      <div class="ap-field mb-6">
+        <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Archivos Adjuntos (Opcional)</label>
+        
+        @if (!pendingFile) {
+          <div class="flex items-center justify-center w-full">
+            <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all group">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <mat-icon class="text-slate-400 group-hover:text-blue-500 mb-2">cloud_upload</mat-icon>
+                <p class="mb-1 text-sm text-slate-500 font-medium">Haz clic para subir un archivo</p>
+                <p class="text-xs text-slate-400">Las fotos se optimizan automáticamente.</p>
+                <p class="text-xs text-slate-400">Documentos PDF o Word (Máx. 2MB)</p>
+              </div>
+              <input type="file" class="hidden" (change)="onFileSelected($event)" />
+            </label>
+          </div>
+        } @else {
+          <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                <mat-icon>insert_drive_file</mat-icon>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-blue-900">{{ pendingFileName }}</p>
+                <p class="text-xs text-blue-600">Listo para subir</p>
+              </div>
+            </div>
+            <button class="p-2 text-blue-400 hover:text-red-500 transition-colors" (click)="removeFile()" [disabled]="loading">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (isAgent || isAdmin) {
+        <div class="ap-field mt-6 p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
+          <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-4 block">Opciones de Asignación</label>
+          <div class="flex flex-wrap gap-6">
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="radio" name="assignment" value="none" [(ngModel)]="assignmentOption" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+              <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900">Sin asignar</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+              <input type="radio" name="assignment" value="me" [(ngModel)]="assignmentOption" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+              <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900">Asignarme a mí</span>
+            </label>
+            @if (isAdmin && agents.length > 0) {
+              <label class="flex items-center gap-2 cursor-pointer group">
+                <input type="radio" name="assignment" value="agent" [(ngModel)]="assignmentOption" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900">Asignar a técnico</span>
+              </label>
+            }
+          </div>
+
+          @if (assignmentOption === 'agent' && isAdmin) {
+            <div class="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              <select class="ap-select w-full p-2 border border-slate-200 rounded-lg bg-white" [(ngModel)]="selectedAgentId">
+                <option [value]="null" disabled selected>— Selecciona técnico —</option>
+                @for (a of agents; track a.id) {
+                  <option [value]="a.id">{{ a.name }}</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="ap-form-actions flex items-center justify-end gap-4 mt-8 pt-6 border-t border-slate-100">
+        <button class="px-6 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors" 
+                (click)="cancel()">
+          Cancelar
+        </button>
+        <button class="flex items-center gap-2 px-8 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-slate-900/10 transition-all" 
+                [disabled]="loading || !title || !description || !categoryId" 
+                (click)="submit()">
+          @if (loading) {
+            <mat-spinner diameter="18" class="text-white"></mat-spinner>
+            <span class="ml-2">{{ uploadingAttachment ? 'Subiendo archivo...' : 'Creando...' }}</span>
+          } @else {
+            <mat-icon class="text-lg">send</mat-icon>
+            <span>Crear Incidencia</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </main>
+</div>

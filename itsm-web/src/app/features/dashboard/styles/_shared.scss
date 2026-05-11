@@ -1,0 +1,302 @@
+@keyframes pulse-red {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+}
+
+// ─── CHAT ICON - funciona en ic-top Y tc-top ─────────────────
+.ic-chat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #94a3b8;
+  background: #f1f5f9;
+  transition: all 0.2s;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.has-unread {
+    background: #fef2f2;
+    color: #dc2626;
+    animation: pulse-red 2s infinite;
+
+    mat-icon {
+      font-weight: 700;
+    }
+  }
+
+  &:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+}
+
+.ic-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.ic-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ic-cat {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  background: #f8fafc;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.ic-date {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.ic-agent {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+  background: #f0fdf4;
+  padding: 4px 10px;
+  border-radius: 6px;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// ─── QUICK ACTIONS (admin/agente en dashboard) ────────────────
+.quick-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.qa-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 13px;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #64748b;
+  }
+
+  &:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+.qa-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+}
+
+
+// ─── PRIORITY BADGES ──────────────────────────────────────────
+.p-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+
+  &.priority-critical {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 0.5px solid #fca5a5;
+  }
+
+  &.priority-high {
+    background: #fff7ed;
+    color: #ea580c;
+    border: 0.5px solid #fdba74;
+  }
+
+  &.priority-medium {
+    background: #fefce8;
+    color: #ca8a04;
+    border: 0.5px solid #fde047;
+  }
+
+  &.priority-low {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 0.5px solid #86efac;
+  }
+}
+
+// ─── TABLA ────────────────────────────────────────────────────
+.table-card {
+  background: #ffffff;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover td {
+    background: #f8fafc !important;
+  }
+}
+
+// ─── BOTONES ──────────────────────────────────────────────────
+
+// ─── BOTONES ──────────────────────────────────────────────────
+.btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #1e293b;
+  background: transparent;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #1e293b;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(30, 41, 59, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-outline-sm {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #1e293b;
+  background: transparent;
+  color: #1e293b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #1e293b;
+    color: #ffffff;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #ffffff;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  mat-spinner {
+    display: inline-block;
+  }
+
+  &:hover:not(:disabled) {
+    background: #334155;
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.20);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

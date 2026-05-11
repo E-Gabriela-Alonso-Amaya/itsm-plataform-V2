@@ -1,0 +1,259 @@
+// Clases compartidas que usa este componente
+@use '../../styles/shared' as *;
+@use '../../styles/inspector' as *;
+
+// ─── DRAWER OVERLAY + CONTENEDOR ──────────────────────────────
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 300;
+  backdrop-filter: blur(2px);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.drawer-employee {
+  width: min(820px, 95vw);
+}
+
+// ─── HEADER ───────────────────────────────────────────────────
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.drawer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.drawer-id {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  font-family: monospace;
+}
+
+.drawer-tit {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.dm-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.dm-cat {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: transparent;
+  border: 0.5px solid #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  flex-shrink: 0;
+  transition: all 0.15s;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { background: #f1f5f9; color: #1e293b; }
+}
+
+// ─── DOS COLUMNAS ─────────────────────────────────────────────
+.drawer-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+.drawer-col-info {
+  border-right: 1px solid #e2e8f0;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.drawer-col-chat {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drawer-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 18px 0;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+// ─── INFO DEL DRAWER ─────────────────────────────────────────
+.drawer-info {
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// ─── CHAT DEL DRAWER ─────────────────────────────────────────
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  &.chat-mine { align-items: flex-end; }
+}
+
+.chat-bubble {
+  background: #f1f5f9;
+  color: #1e293b;
+  padding: 9px 13px;
+  border-radius: 14px 14px 14px 2px;
+  font-size: 13px;
+  max-width: 85%;
+  line-height: 1.5;
+  word-break: break-word;
+
+  .chat-mine & {
+    background: #1e293b;
+    color: #fff;
+    border-radius: 14px 14px 2px 14px;
+  }
+}
+
+.chat-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
+.chat-empty {
+  text-align: center;
+  font-size: 13px;
+  color: #cbd5e1;
+  padding: 40px 0;
+}
+
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  align-items: flex-end;
+  background: #f8fafc;
+}
+
+.chat-input {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  max-height: 100px;
+  color: #1e293b;
+  background: #ffffff;
+  outline: none;
+  transition: all 0.2s;
+
+  &:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+}
+
+.chat-send {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #1e293b;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  &:hover:not(:disabled) { background: #334155; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ─── RESPONSIVE MÓVIL ────────────────────────────────────────
+@media (max-width: 600px) {
+  .drawer-employee { width: 100vw; }
+
+  .drawer-two-col {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .drawer-col-info {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    max-height: 45vh;
+  }
+}

@@ -1,0 +1,541 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+  <!-- KPIs -->
+  <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <div class="text-xs font-bold text-slate-400 uppercase mb-1">Carga de Trabajo</div>
+      <div class="flex items-end gap-2">
+        <div class="text-3xl font-bold text-slate-800">{{ totalIncidents }}</div>
+        <div class="text-xs text-emerald-500 font-medium mb-1">tickets globales</div>
+      </div>
+      <div class="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div class="h-full bg-sky-500" [style.width]="workloadPercentage + '%'"></div>
+      </div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <div class="text-xs font-bold text-slate-400 uppercase mb-1">T. Medio Respuesta</div>
+      <div class="text-3xl font-bold text-slate-800">{{ avgResponseTime }}</div>
+      <div class="mt-2 flex items-center gap-1 text-xs text-slate-400">
+        <mat-icon class="text-[14px]">bolt</mat-icon> Objetivo: &lt; 2h
+      </div>
+    </div>
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <div class="text-xs font-bold text-slate-400 uppercase mb-1">Satisfacción</div>
+      <div class="text-3xl font-bold text-slate-800">{{ satisfactionScore }}<span class="text-lg text-slate-400">/5</span></div>
+      <div class="mt-2 flex gap-1">
+        @if (satisfactionScore === '0') {
+          <span class="text-xs text-slate-400 font-medium">Sin valoraciones previas</span>
+        } @else {
+          @for (i of satisfactionStars; track i) { <mat-icon class="text-amber-400 text-[16px]">star</mat-icon> }
+          @if (hasHalfStar) { <mat-icon class="text-amber-400 text-[16px]">star_half</mat-icon> }
+        }
+      </div>
+    </div>
+  </div>
+
+    <!-- TOP AGENTES -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <mat-icon class="text-emerald-500 scale-90">leaderboard</mat-icon> Rendimiento
+      </h3>
+      <div class="space-y-4">
+        @for (agent of topAgentsDynamic; track agent.name) {
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-600">
+            {{ agent.name.charAt(0) }}
+          </div>
+          <div class="flex-grow">
+            <div class="flex justify-between items-end mb-1">
+              <div class="text-xs font-bold text-slate-700">{{ agent.name }}</div>
+              <div class="text-[10px] text-slate-400">{{ agent.resolved }} resueltos</div>
+            </div>
+            <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+               <div class="h-full bg-emerald-500" [style.width]="agent.performance + '%'"></div>
+            </div>
+          </div>
+          <div class="text-xs font-bold text-emerald-500 w-8 text-right">{{ agent.performance }}%</div>
+        </div>
+        }
+        @if (topAgentsDynamic.length === 0) {
+          <div class="text-xs text-slate-400 text-center py-4">No hay técnicos asignados a tickets en este proyecto.</div>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (selectedCompany !== 'global') {
+  <div style="margin-top: 24px">
+    <div class="section-title-row flex items-center justify-between">
+      <h2 class="section-title mb-0">
+        Panel de Incidencias
+        <div class="dashboard-tabs">
+          <button class="tab" [class.active]="adminDashboardTab === 'queue'"
+            (click)="setDashboardTab.emit('queue')">Panel de asignación</button>
+          <button class="tab" [class.active]="adminDashboardTab === 'my-tickets'"
+            (click)="setDashboardTab.emit('my-tickets')">Incidencias Asignadas</button>
+        </div>
+      </h2>
+      <button class="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm"
+        (click)="goToCreate.emit()">
+        <mat-icon class="text-sm">add</mat-icon>
+        Nueva Incidencia
+      </button>
+    </div>
+
+    @if (adminDashboardTab === 'queue') {
+    <div class="kanban-filters">
+      <select class="f-select-sm" [(ngModel)]="filterPriority" (change)="onFilterChange()">
+        <option value="">Todas las prioridades</option>
+        @for (p of priorities; track p.id) { <option [value]="p.name">{{ p.name }}</option> }
+      </select>
+      <select class="f-select-sm" [(ngModel)]="filterCategory" (change)="onFilterChange()">
+        <option value="">Todas las categorías</option>
+        @for (c of categories; track c.id) { <option [value]="c.name">{{ c.name }}</option> }
+      </select>
+      @if (filterPriority || filterCategory) {
+      <button class="btn-clear-filter" (click)="clearFilters.emit()">
+        <mat-icon>close</mat-icon> Limpiar
+      </button>
+      }
+    </div>
+
+    <!-- KANBAN PANEL ASIGNACIÓN -->
+    <div class="kanban-tabs" *ngIf="isMobile">
+      <button class="kanban-tab" [class.active]="activeKanbanTab === 'new'"
+        (click)="setKanbanTab.emit('new')">Nuevo</button>
+      <button class="kanban-tab" [class.active]="activeKanbanTab === 'assigned'"
+        (click)="setKanbanTab.emit('assigned')">Asignados</button>
+      <button class="kanban-tab" [class.active]="activeKanbanTab === 'progress'"
+        (click)="setKanbanTab.emit('progress')">Procesando</button>
+      <button class="kanban-tab" [class.active]="activeKanbanTab === 'waiting'"
+        (click)="setKanbanTab.emit('waiting')">Espera</button>
+      <button class="kanban-tab" [class.active]="activeKanbanTab === 'done'"
+        (click)="setKanbanTab.emit('done')">Resuelto</button>
+    </div>
+
+    <div class="kanban-board kanban-5col">
+      <!-- NUEVO -->
+      <div class="kanban-col" *ngIf="!isMobile || activeKanbanTab === 'new'">
+        <div class="col-header col-new">
+          <span class="col-dot"></span><span class="col-name">Nuevo</span>
+          <span class="col-count">{{ colNew.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colNew; track t.id) {
+          <div class="ticket-card" [class.ins-active]="selectedTicket?.id === t.id" (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- TIME INFO (New) -->
+            <div class="sla-container">
+              <div class="sla-info">
+                <span>En cola: {{ getCreationTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="100" [style.background-color]="getQueueColor(t.status)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer">
+              <span class="tc-unassigned">Sin asignar</span>
+              <div class="tc-assign-btns">
+                <button class="btn-outline-sm" (click)="$event.stopPropagation(); assignToMe.emit(t)">Asumir</button>
+                <div class="tc-assign-dropdown">
+                  <button class="btn-outline-sm"
+                    (click)="$event.stopPropagation(); toggleAssignDropdown.emit(t.id)">Asignar ▾</button>
+                  @if (assignDropdownId === t.id) {
+                  <div class="assign-dropdown-menu" (click)="$event.stopPropagation()">
+                    @for (a of agents; track a.id) {
+                    <div class="assign-dropdown-item" (click)="onAssignAgent(t, a.id)">{{ a.name }}</div>
+                    }
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+          @if (colNew.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- ASIGNADOS -->
+      <div class="kanban-col" *ngIf="!isMobile || activeKanbanTab === 'assigned'">
+        <div class="col-header col-assigned">
+          <span class="col-dot"></span><span class="col-name">Asignados</span>
+          <span class="col-count">{{ colAssignedPanel.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colAssignedPanel; track t.id) {
+          <div class="ticket-card" [class.ins-active]="selectedTicket?.id === t.id" (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- TIME INFO (Assigned) -->
+            <div class="sla-container">
+              <div class="sla-info">
+                <span>En cola: {{ getCreationTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="100" [style.background-color]="getQueueColor(t.status)">
+                </div>
+              </div>
+            </div>
+
+            <div class="tc-footer"><span class="tc-agent">{{ t.assignedTo }}</span></div>
+          </div>
+          }
+          @if (colAssignedPanel.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- PROCESANDO -->
+      <div class="kanban-col" *ngIf="!isMobile || activeKanbanTab === 'progress'">
+        <div class="col-header col-progress">
+          <span class="col-dot"></span><span class="col-name">Procesando</span>
+          <span class="col-count">{{ colProcessingPanel.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colProcessingPanel; track t.id) {
+          <div class="ticket-card is-progress" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR (Processing) -->
+            <div class="sla-container" *ngIf="t.slaHours">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer"><span class="tc-agent">{{ t.assignedTo ?? 'Sin asignar' }}</span></div>
+          </div>
+          }
+          @if (colProcessingPanel.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- ESPERA -->
+      <div class="kanban-col" *ngIf="!isMobile || activeKanbanTab === 'waiting'">
+        <div class="col-header col-waiting">
+          <span class="col-dot"></span><span class="col-name">Espera info</span>
+          <span class="col-count">{{ colWaitingPanel.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colWaitingPanel; track t.id) {
+          <div class="ticket-card is-waiting" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR (Waiting) -->
+            <div class="sla-container" *ngIf="t.slaHours">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer">
+              <span class="tc-agent">{{ t.assignedTo ?? 'Sin asignar' }}</span>
+              @if (currentUserRole === 'ROLE_AGENT') {
+                <button class="btn-state btn-state-progress ml-auto !flex-none !w-auto" 
+                  (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Procesando'})">
+                  Reanudar
+                </button>
+              }
+            </div>
+          </div>
+          }
+          @if (colWaitingPanel.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- RESUELTO -->
+      <div class="kanban-col" *ngIf="!isMobile || activeKanbanTab === 'done'">
+        <div class="col-header col-done">
+          <span class="col-dot"></span><span class="col-name">Resuelto</span>
+          <span class="col-count">{{ colDonePanel.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colDonePanel; track t.id) {
+          <div class="ticket-card resolved" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR (Done) -->
+            <div class="sla-container" *ngIf="t.slaHours">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer"><span class="tc-agent">{{ t.assignedTo ?? '—' }}</span></div>
+          </div>
+          }
+          @if (colDonePanel.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- MIS TICKETS (admin) -->
+    @if (adminDashboardTab === 'my-tickets') {
+    <div class="kanban-board kanban-5col">
+      <!-- ASIGNADOS -->
+      <div class="kanban-col">
+        <div class="col-header col-assigned">
+          <span class="col-dot"></span><span class="col-name">Mis tickets</span>
+          <span class="col-count">{{ colAdminAssigned.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colAdminAssigned; track t.id) {
+          <div class="ticket-card is-assigned" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="sla-container" *ngIf="!shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>En cola: {{ getCreationTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="100" [style.background-color]="getQueueColor(t.status)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer">
+              <div class="tc-status-actions">
+                <button class="btn-state btn-state-progress"
+                  (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Procesando'})">Empezar
+                  →</button>
+              </div>
+            </div>
+          </div>
+          }
+          @if (colAdminAssigned.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- PROCESANDO -->
+      <div class="kanban-col">
+        <div class="col-header col-progress">
+          <span class="col-dot"></span><span class="col-name">En curso</span>
+          <span class="col-count">{{ colAdminProgress.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colAdminProgress; track t.id) {
+          <div class="ticket-card is-progress" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="sla-container" *ngIf="!shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>En cola: {{ getCreationTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="100" [style.background-color]="getQueueColor(t.status)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer">
+              <div class="tc-status-actions">
+                @if (t.status === 'Asignado' || t.status === 'Nuevo' || t.status === 'Abierta') {
+                <button class="btn-state btn-state-progress"
+                  (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Procesando'})">Empezar</button>
+                }
+                @if (t.status === 'Procesando' || t.status === 'Espera info' || t.status === 'Pendiente') {
+                <button class="btn-state btn-state-done"
+                  (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Resuelto'})">Resolver</button>
+                }
+              </div>
+            </div>
+          </div>
+          }
+          @if (colAdminProgress.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- ESPERA INFO -->
+      <div class="kanban-col">
+        <div class="col-header col-waiting">
+          <span class="col-dot"></span><span class="col-name">En espera</span>
+          <span class="col-count">{{ colAdminWaiting.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colAdminWaiting; track t.id) {
+          <div class="ticket-card is-waiting" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="sla-container" *ngIf="!shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>En cola: {{ getCreationTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="100" [style.background-color]="getQueueColor(t.status)">
+                </div>
+              </div>
+            </div>
+            <div class="tc-footer">
+              <div class="tc-status-actions">
+                @if (currentUserRole === 'ROLE_AGENT') {
+                  <button class="btn-state btn-state-progress"
+                    (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Procesando'})">
+                    Reanudar →
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+          }
+          @if (colAdminWaiting.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+
+      <!-- RESUELTO -->
+      <div class="kanban-col">
+        <div class="col-header col-done">
+          <span class="col-dot"></span><span class="col-name">Finalizados</span>
+          <span class="col-count">{{ colAdminDone.length }}</span>
+        </div>
+        <div class="col-cards">
+          @for (t of colAdminDone; track t.id) {
+          <div class="ticket-card resolved opacity-50" [class.ins-active]="selectedTicket?.id === t.id"
+            (click)="openDrawer.emit(t)">
+            <div class="tc-top">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+            </div>
+            <div class="tc-title line-through">{{ t.title }}</div>
+            <div class="tc-cat">{{ t.category }}</div>
+
+            <!-- SLA BAR -->
+            <div class="sla-container" *ngIf="t.slaHours && shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>SLA: {{ t.slaHours }}h</span>
+                <span>{{ getWorkTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="getSlaWidth(t)" [style.background-color]="getSlaColor(t)">
+                </div>
+              </div>
+            </div>
+            <div class="sla-container" *ngIf="!shouldShowSla(t.status)">
+              <div class="sla-info">
+                <span>En cola: {{ getCreationTime(t) }}</span>
+              </div>
+              <div class="sla-bar-bg">
+                <div class="sla-bar-fill" [style.width.%]="100" [style.background-color]="getQueueColor(t.status)">
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+          @if (colAdminDone.length === 0) { <div class="col-empty">Sin tickets</div> }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  } @else {
+  <div class="bg-white rounded-3xl p-12 border border-slate-100 shadow-sm text-center">
+    <div class="w-20 h-20 bg-sky-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+      <mat-icon class="text-sky-500 scale-150">business</mat-icon>
+    </div>
+    <h2 class="text-2xl font-bold text-slate-800 mb-3">Visión Global del Sistema</h2>
+    <p class="text-slate-500 max-w-md mx-auto mb-8">
+      Has accedido a la vista consolidada. Selecciona una empresa específica en el menú lateral para gestionar sus
+      incidencias y ver su tablero Kanban dedicado.
+    </p>
+    <div class="flex justify-center gap-4">
+      <div class="px-6 py-3 bg-slate-50 rounded-xl border border-slate-100">
+        <div class="text-xs font-bold text-slate-400 uppercase">Carga Total</div>
+        <div class="text-xl font-bold text-slate-700">{{ totalIncidents }}</div>
+      </div>
+      <div class="px-6 py-3 bg-slate-50 rounded-xl border border-slate-100">
+        <div class="text-xs font-bold text-slate-400 uppercase">Agentes</div>
+        <div class="text-xl font-bold text-slate-700">{{ agents.length }}</div>
+      </div>
+    </div>
+  </div>
+  }

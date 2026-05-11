@@ -1,0 +1,52 @@
+<div class="view-header mb-6 flex justify-between items-center">
+  <h1 class="text-2xl font-bold text-slate-800">Mis Tickets (Creados por mí)</h1>
+  <button class="ap-btn-primary" (click)="goToCreate.emit()">
+    <mat-icon>add</mat-icon> Nuevo Ticket
+  </button>
+</div>
+
+<div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-50/50">
+          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">ID</th>
+          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Asunto</th>
+          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Categoría</th>
+          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Estado</th>
+          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Prioridad</th>
+          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Fecha</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-50 text-sm">
+        @for (ticket of tickets; track ticket.id) {
+          <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" (click)="openDrawer.emit(ticket)">
+            <td class="px-6 py-4 font-mono text-xs text-slate-400">#{{ ticket.id.substring(0, 5) }}</td>
+            <td class="px-6 py-4 font-bold text-slate-700">{{ ticket.title }}</td>
+            <td class="px-6 py-4 text-slate-500">{{ ticket.category }}</td>
+            <td class="px-6 py-4">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                [class.bg-emerald-50]="ticket.isClosed" [class.text-emerald-600]="ticket.isClosed"
+                [class.bg-sky-50]="!ticket.isClosed" [class.text-sky-600]="!ticket.isClosed">
+                {{ ticket.status }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded" [ngClass]="getPriorityClass(ticket.priority)">
+                {{ ticket.priority }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-slate-400 text-xs">{{ ticket.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
+          </tr>
+        }
+        @if (tickets.length === 0) {
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">
+              No has creado ningún ticket todavía.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

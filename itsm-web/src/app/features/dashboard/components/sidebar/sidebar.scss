@@ -1,0 +1,351 @@
+// ─── COMPANY SIDEBAR (EXPANDED) ─────────────────────────────────
+
+.company-sidebar {
+  width: 72px; // Default collapsed width
+  flex-shrink: 0;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  padding: 24px 12px; // Centered for icons
+  display: flex;
+  flex-direction: column;
+  align-items: center; // Centered when collapsed
+  gap: 16px;
+  overflow-y: auto;
+  overflow-x: hidden; // Prevent horizontal scroll during expansion
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease, box-shadow 0.4s ease;
+  z-index: 100;
+
+  @media (min-width: 1025px) {
+    &:hover {
+      width: 240px; // Expanded width
+      padding: 24px 16px;
+      align-items: flex-start;
+      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+}
+
+.company-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  align-items: center; // Default centered for collapsed icons
+  transition: align-items 0.4s ease;
+
+  @media (min-width: 1025px) {
+    .company-sidebar:hover & {
+      align-items: flex-start;
+    }
+  }
+}
+
+.company-item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 48px;
+  padding: 0 8px; // Narrow padding for icons
+  gap: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+  overflow: hidden;
+
+  @media (min-width: 1025px) {
+    .company-sidebar:hover & {
+      padding: 0 12px;
+    }
+  }
+
+  &:hover {
+    background: #e2e8f0;
+  }
+
+  &.active {
+    background: #f1f5f9;
+  }
+
+  .company-icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    overflow: hidden;
+    color: #94a3b8;
+    background: #ffffff;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .company-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &:hover .company-icon-circle {
+    transform: translateY(-2px);
+    border-color: #e0f2fe;
+    color: #0ea5e9;
+  }
+
+  &.active .company-icon-circle {
+    border-color: #0ea5e9;
+    color: #0ea5e9;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+  }
+
+  .company-name {
+    display: block; 
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    
+    // Hidden state
+    opacity: 0;
+    transform: translateX(-10px);
+    pointer-events: none;
+
+    @media (min-width: 1025px) {
+      .company-sidebar:hover & {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+    }
+  }
+
+  &.active .company-name {
+    color: #0ea5e9;
+  }
+
+  .company-notifications {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    padding-left: 8px;
+    transition: opacity 0.3s ease;
+    
+    // Hidden state in collapsed view
+    opacity: 0;
+
+    @media (min-width: 1025px) {
+      .company-sidebar:hover & {
+        opacity: 1;
+      }
+    }
+
+    .notif-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px #f8fafc; // Match sidebar background
+      
+      &.dot-new {
+        background: #0ea5e9; // Blue
+      }
+      &.dot-assigned {
+        background: #f59e0b; // Orange/Amber
+      }
+    }
+  }
+
+  &.active .notif-dot {
+    box-shadow: 0 0 0 2px #f1f5f9; // Match active item background
+  }
+
+  // Active Indicator Line
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: scaleY(0);
+    width: 4px;
+    background: #38bdf8;
+    border-radius: 4px;
+    transition: transform 0.2s ease;
+  }
+
+  &.active::before {
+    transform: scaleY(1);
+  }
+}
+
+// ─── OVERLAY ──────────────────────────────────────────────────
+.sidebar-overlay {
+  display: none;
+}
+
+// ─── RESPONSIVE ───────────────────────────────────────────────
+
+@media (max-width: 1024px) {
+  // TABLET: Hide text, revert to icon-only narrow sidebar
+  .company-sidebar {
+    width: 72px;
+    padding: 16px 0;
+    align-items: center;
+  }
+
+  .company-list {
+    align-items: center;
+  }
+
+  .company-item {
+    flex-direction: column;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    gap: 0;
+    border-radius: 12px;
+    background: transparent !important;
+
+    .company-name {
+      display: none;
+    }
+
+    .company-icon-circle {
+      width: 48px;
+      height: 48px;
+      
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .company-notifications {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0;
+      
+      .notif-dot {
+        width: 6px;
+        height: 6px;
+        box-shadow: 0 0 0 2px #f8fafc;
+      }
+    }
+
+    &::before {
+      left: -12px;
+      top: 50%;
+      bottom: auto;
+      transform: translateY(-50%) scaleY(0);
+      width: 4px;
+      height: 24px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    &.active::before {
+      transform: translateY(-50%) scaleY(1);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  // MOBILE: Open as a Drawer
+  .company-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; // Drawer width
+    width: 280px;
+    height: 100vh;
+    padding: 24px 16px;
+    align-items: flex-start;
+    background: #ffffff;
+    box-shadow: none;
+    z-index: 300;
+
+    &.open {
+      left: 0;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+    }
+
+    .company-list {
+      align-items: flex-start;
+    }
+
+    .company-item {
+      flex-direction: row;
+      justify-content: flex-start;
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      gap: 16px;
+      border-radius: 8px;
+      
+      &.active {
+        background: #f1f5f9 !important;
+      }
+
+      .company-name {
+        display: block; // Show names in Drawer
+      }
+
+      .company-icon-circle {
+        width: 32px;
+        height: 32px;
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      &::before {
+        left: 0;
+        top: 0;
+        bottom: 0;
+        height: 100%;
+        transform: scaleY(0);
+        width: 3px;
+        border-radius: 4px;
+      }
+
+      &.active::before {
+        transform: scaleY(1);
+      }
+    }
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 299;
+  }
+}

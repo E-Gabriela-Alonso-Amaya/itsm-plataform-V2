@@ -1,0 +1,45 @@
+nelmio_security:
+    # Evita que la app se cargue en un iframe (clickjacking)
+    clickjacking:
+        paths:
+            '^/.*': DENY
+
+    # Evita que el navegador adivine el tipo de contenido
+    content_type:
+        nosniff: true
+
+    # Política de referrer
+    referrer_policy:
+        enabled: true
+        policies:
+            - 'no-referrer'
+            - 'strict-origin-when-cross-origin'
+
+    # Fuerza HTTPS en producción
+    forced_ssl:
+        enabled: false  # cambiar a true en producción
+        hsts_max_age: 2592000  # 30 días
+        redirect_status_code: 301
+
+    # Content Security Policy
+    csp:
+        enabled: true
+        hosts: [ ]
+        content_types: [ ]
+        enforce:
+            default-src:
+                - 'none'
+            script-src:
+                - 'self'
+            style-src:
+                - 'self'
+                - 'unsafe-inline'
+            img-src:
+                - 'self'
+                - 'data:'
+            font-src:
+                - 'self'
+            connect-src:
+                - 'self'
+            frame-ancestors:
+                - 'none'

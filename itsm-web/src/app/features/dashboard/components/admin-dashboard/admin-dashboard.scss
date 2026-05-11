@@ -1,0 +1,12 @@
+@use '../../styles/shared' as *;
+@use '../../styles/stats' as *;
+@use '../../styles/kanban' as *;
+
+:host {
+  display: block;
+}
+
+// Admin ranking styles
+.military_tech {
+  font-size: 18px;
+}

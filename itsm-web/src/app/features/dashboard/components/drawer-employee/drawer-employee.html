@@ -1,0 +1,129 @@
+@if (isEmployee() && drawerOpen && selectedTicket) {
+<div class="drawer-overlay" (click)="closeDrawer.emit()"></div>
+
+<div class="drawer drawer-employee">
+
+  <div class="drawer-header">
+    <div class="drawer-title">
+      <span class="drawer-id">{{ selectedTicket.id.slice(0,8).toUpperCase() }}</span>
+      <span class="drawer-tit">{{ selectedTicket.title }}</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+        <span class="p-badge" [ngClass]="getPriorityClass(selectedTicket.priority)">{{ selectedTicket.priority }}</span>
+        <span class="dm-status">{{ selectedTicket.status }}</span>
+        <span class="dm-cat">{{ selectedTicket.category }}</span>
+      </div>
+    </div>
+    <button class="drawer-close" (click)="closeDrawer.emit()"><mat-icon>close</mat-icon></button>
+  </div>
+
+  <div class="drawer-two-col">
+
+    <!-- COL A: INFO + ADJUNTOS -->
+    <div class="drawer-col-info">
+      <div class="drawer-chat-title" style="padding-bottom:10px;border-bottom:1px solid #e2e8f0;">
+        <mat-icon>info_outline</mat-icon> Información
+      </div>
+      <div class="drawer-info">
+        <div class="di-row"><span class="di-lbl">Reportado por</span><span class="di-val">{{ selectedTicket.reportedBy
+            }}</span></div>
+        <div class="di-row"><span class="di-lbl">Asignado a</span><span class="di-val">{{ selectedTicket.assignedTo ??
+            'Sin asignar' }}</span></div>
+        <div class="di-row"><span class="di-lbl">Fecha</span><span class="di-val">{{ selectedTicket.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+        </div>
+        <div class="di-row di-desc"><span class="di-lbl">Descripción</span>
+          <p class="di-val-p">{{ selectedTicket.description }}</p>
+        </div>
+      </div>
+
+      <div class="drawer-chat-title" style="margin-top:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0;">
+        <mat-icon>attach_file</mat-icon> Adjuntos
+        @if (attachments.length > 0) { <span class="ins-col-badge">{{ attachments.length }}</span> }
+      </div>
+
+      @if (!selectedTicket.isClosed) {
+      <div class="ins-upload-zone" style="margin:10px 18px 0;">
+        <div class="ins-upload-btns">
+          <button class="up-btn file" (click)="fileInput2.click()">
+            <mat-icon>add_to_photos</mat-icon> Archivo
+          </button>
+          <button class="up-btn camera" (click)="cameraInput2.click()">
+            <mat-icon>photo_camera</mat-icon> Cámara
+          </button>
+        </div>
+        <input #fileInput2 type="file" style="display:none" accept="image/*,.pdf,.doc,.docx"
+          (change)="onFileSelected.emit($event)" />
+        <input #cameraInput2 type="file" style="display:none" accept="image/*" capture="environment"
+          (change)="onFileSelected.emit($event)" />
+      </div>
+
+      @if (pendingFile) {
+      <div class="ins-pending-card" style="margin:8px 18px;">
+        <div class="pending-top">
+          <mat-icon>insert_drive_file</mat-icon>
+          <span class="p-name">{{ pendingFile.name }}</span>
+        </div>
+        <input class="p-input" [ngModel]="pendingDescription" (ngModelChange)="pendingDescriptionChange.emit($event)" placeholder="Nota opcional..." />
+        <div class="p-actions">
+          <button class="p-btn-up" [disabled]="uploadingAttachment" (click)="uploadAttachment.emit()">
+            @if (uploadingAttachment) { <mat-spinner diameter="14"></mat-spinner> } @else { Subir }
+          </button>
+          <button class="p-btn-cancel" (click)="cancelPending.emit()">Cancelar</button>
+        </div>
+      </div>
+      }
+
+
+      }
+
+      <div class="ins-attachments-grid" style="padding:8px 18px;">
+        @for (att of attachments; track att.id) {
+        <div class="ins-att-item">
+          <div class="att-thumb" (click)="openAttachmentPreview.emit(att)">
+            @if (att.isImage) { <img [src]="getAttachmentUrl(att.id) | secureImage | async" /> }
+            @else { <mat-icon>description</mat-icon> }
+          </div>
+          <div class="att-info">
+            <span class="name">{{ att.originalName }}</span>
+            <span class="meta">{{ att.uploadedBy }}</span>
+          </div>
+        </div>
+        }
+        @if (attachments.length===0) { <div class="att-empty">Sin adjuntos.</div> }
+      </div>
+
+
+    </div>
+
+    <!-- COL B: CHAT -->
+    <div class="drawer-col-chat">
+      <div class="drawer-chat-title" style="padding-bottom:10px;border-bottom:1px solid #e2e8f0;">
+        <mat-icon>chat_bubble_outline</mat-icon> Chat
+      </div>
+      <div class="chat-messages" #chatContainerDrawer>
+        @if (loadingComments) { <div class="loading-center"><mat-spinner diameter="32"></mat-spinner></div> }
+        @for (msg of comments; track msg.id) {
+        <div class="chat-msg" [class.chat-mine]="msg.isOwn">
+          <div class="chat-bubble">{{ msg.content }}</div>
+          <div class="chat-meta">{{ msg.authorName }} · {{ msg.createdAt | date: 'dd-MM-yyyy HH:mm' }}</div>
+        </div>
+        }
+        @if (comments.length===0 && !loadingComments) {
+        <div class="chat-empty">No hay mensajes aún.</div>
+        }
+      </div>
+      @if (!selectedTicket.isClosed) {
+      <div class="chat-input-area">
+        <textarea class="chat-input" [ngModel]="newComment" (ngModelChange)="newCommentChange.emit($event)" placeholder="Escribir mensaje…"
+          (keydown.control.enter)="sendComment.emit()"></textarea>
+        <button class="chat-send" [disabled]="!newComment.trim() || sendingComment" (click)="sendComment.emit()">
+          @if (sendingComment) { <mat-spinner diameter="18"></mat-spinner> }
+          @else { <mat-icon>send</mat-icon> }
+        </button>
+      </div>
+      }
+    </div>
+
+
+  </div>
+</div>
+}

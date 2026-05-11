@@ -1,0 +1,6 @@
+[submodule "itsm-api"]
+	path = itsm-api
+	url = ./itsm-api
+[submodule "itsm-web"]
+	path = itsm-web
+	url = ./itsm-web

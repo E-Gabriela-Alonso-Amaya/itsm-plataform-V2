@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<div class="login-wrapper">
+
+  <!-- Panel izquierdo — branding -->
+  <div class="login-brand">
+    <div class="brand-content">
+      <h1 class="brand-title">HelpDesk</h1>
+      <p class="brand-tagline">Plataforma de gestión de incidencias y soporte técnico</p>
+      <div class="brand-features">
+        <div class="feature-item">
+          <mat-icon>speed</mat-icon>
+          <span>Resolución ágil de tickets</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>groups</mat-icon>
+          <span>Colaboración entre equipos</span>
+        </div>
+        <div class="feature-item">
+          <mat-icon>analytics</mat-icon>
+          <span>Informes y métricas en tiempo real</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel derecho — formulario -->
+  <div class="login-panel">
+    <div class="login-card">
+
+      <div class="login-header">
+        <div class="login-icon">
+          <mat-icon>lock_person</mat-icon>
+        </div>
+        <h2 class="login-title">Iniciar sesión</h2>
+        <p class="login-subtitle">Introduce tus credenciales para continuar</p>
+      </div>
+
+      <div class="login-form">
+        <div class="form-field">
+          <label class="form-label">
+            <mat-icon>email</mat-icon>
+            Correo electrónico
+          </label>
+          <input
+            class="form-input"
+            type="email"
+            [(ngModel)]="email"
+            placeholder="ejemplo@empresa.com"
+            (keyup.enter)="login()"
+            autocomplete="email"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">
+            <mat-icon>lock</mat-icon>
+            Contraseña
+          </label>
+          <div class="input-wrap">
+            <input
+              class="form-input"
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              placeholder="Tu contraseña"
+              (keyup.enter)="login()"
+              autocomplete="current-password"
+            />
+            <button class="toggle-pw" type="button" (click)="showPassword = !showPassword" tabindex="-1">
+              <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        @if (error) {
+          <div class="error-alert">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ error }}</span>
+          </div>
+        }
+
+        <button
+          class="btn-login"
+          [class.loading]="loading"
+          [disabled]="loading"
+          (click)="login()"
+        >
+          @if (loading) {
+            <mat-spinner diameter="20" class="spinner-white"></mat-spinner>
+            <span>Verificando…</span>
+          } @else {
+            <mat-icon>login</mat-icon>
+            <span>Entrar al sistema</span>
+          }
+        </button>
+      </div>
+
+      <p class="login-footer">
+        ¿Problemas para acceder? Contacta con el administrador del sistema.
+      </p>
+
+    </div>
+  </div>
+
+</div>

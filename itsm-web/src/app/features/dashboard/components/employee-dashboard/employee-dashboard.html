@@ -1,0 +1,113 @@
+<div class="employee-dashboard-container">
+  
+  <div class="employee-welcome-banner">
+    <div class="banner-content">
+      <h2 class="welcome-text">Panel de Control</h2>
+      <p class="welcome-sub">Gestiona tus incidencias activas y recientes</p>
+    </div>
+    <button class="btn-create-premium" (click)="goToCreate.emit()">
+      <div class="btn-content">
+        <mat-icon>add_circle</mat-icon>
+        <span>Nueva Incidencia</span>
+      </div>
+      <div class="btn-shine"></div>
+    </button>
+  </div>
+
+  <div class="employee-kanban-section">
+    <div class="section-header">
+      <h3 class="section-title">Tickets Activos</h3>
+    </div>
+
+    @if (loadingList) {
+      <div class="loading-center">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else if (incidentsOpen.length === 0 && incidentsResolved.length === 0) {
+      <div class="empty-state-card">
+        <div class="empty-illustration">
+          <mat-icon>verified</mat-icon>
+        </div>
+        <h3>¡Todo al día!</h3>
+        <p>No tienes incidencias abiertas en este momento.</p>
+        <button class="btn-primary" (click)="goToCreate.emit()">Crear incidencia</button>
+      </div>
+    } @else {
+      <div class="employee-kanban-cols">
+        <!-- SUBCOL: ACTIVOS -->
+        <div class="emp-kanban-col">
+          <div class="col-head">
+            <span class="head-dot dot-blue"></span>
+            En Curso ({{ incidentsOpen.length }})
+          </div>
+          <div class="col-items">
+            @for (t of incidentsOpen; track t.id) {
+              <div class="emp-ticket-card" (click)="openDrawer.emit(t)" [attr.data-status]="t.status">
+                <div class="card-top-row">
+                  <span class="p-badge-outline" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+                  <span class="status-label">{{ t.status }}</span>
+                </div>
+                <div class="card-title">{{ t.title }}</div>
+                <div class="card-meta">
+                  <span class="card-cat">{{ t.category }}</span>
+                </div>
+                <div class="card-bottom">
+                   <span class="card-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+                </div>
+                @if (t.assignedTo) {
+                  <div class="card-agent-bar">
+                    <mat-icon>person</mat-icon> {{ t.assignedTo }}
+                  </div>
+                }
+                @if (hasUnreadComments(t.id)) {
+                  <div class="unread-banner">Nuevo mensaje</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- SUBCOL: RESUELTOS (24H) -->
+        <div class="emp-kanban-col">
+          <div class="col-head">
+            <span class="head-dot dot-green"></span>
+            Resueltos ({{ incidentsResolved.length }})
+          </div>
+          <div class="col-items">
+            @for (t of incidentsResolved; track t.id) {
+              <div class="emp-ticket-card resolved-dim" (click)="openDrawer.emit(t)" data-status="Resuelto">
+                <div class="card-top-row">
+                  <span class="p-badge-outline opacity-50" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+                  <span class="status-label">Resuelto</span>
+                </div>
+                <div class="card-title">{{ t.title }}</div>
+                <div class="card-meta">
+                  <span class="card-cat">{{ t.category }}</span>
+                </div>
+                
+                <div class="card-rating" (click)="$event.stopPropagation()">
+                  <span class="rating-label">Valorar servicio:</span>
+                  <div class="stars">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <mat-icon 
+                        [class.active]="(t.rating || 0) >= star"
+                        (click)="onRate($event, t, star)"
+                      >
+                        {{ (t.rating || 0) >= star ? 'star' : 'star_outline' }}
+                      </mat-icon>
+                    }
+                  </div>
+                </div>
+
+                <div class="card-bottom">
+                   <span class="card-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>

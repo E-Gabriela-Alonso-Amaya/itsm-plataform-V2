@@ -1,0 +1,759 @@
+<div class="ap-shell">
+
+  <!-- CABECERA -->
+  <div class="ap-header">
+    <div class="ap-header-left">
+      <mat-icon class="ap-header-icon text-sky-500">{{ headerInfo.icon }}</mat-icon>
+      <div>
+        <h1 class="ap-title">{{ headerInfo.title }}</h1>
+        <p class="ap-sub">{{ headerInfo.sub }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENSAJES -->
+  @if (successMsg) { <div class="ap-msg-success"><mat-icon>check_circle</mat-icon> {{ successMsg }}</div> }
+  @if (errorMsg)   { <div class="ap-msg-error"><mat-icon>error_outline</mat-icon> {{ errorMsg }}</div> }
+
+  <!-- PESTAÑAS DINÁMICAS -->
+  <div class="ap-tabs">
+    @if (visibleTabs.includes('users')) {
+      <button class="ap-tab" [class.active]="activeTab==='users'" (click)="setTab('users')">
+        <mat-icon>group</mat-icon> Usuarios
+      </button>
+    }
+    @if (visibleTabs.includes('matrix')) {
+      <button class="ap-tab" [class.active]="activeTab==='matrix'" (click)="setTab('matrix')">
+        <mat-icon>grid_on</mat-icon> Asignación
+      </button>
+    }
+    @if (visibleTabs.includes('projects')) {
+      <button class="ap-tab" [class.active]="activeTab==='projects'" (click)="setTab('projects')">
+        <mat-icon>business</mat-icon> Empresas
+      </button>
+    }
+    @if (visibleTabs.includes('ui')) {
+      <button class="ap-tab" [class.active]="activeTab==='ui'" (click)="setTab('ui')">
+        <mat-icon>palette</mat-icon> Apariencia
+      </button>
+    }
+    @if (visibleTabs.includes('audit')) {
+      <button class="ap-tab" [class.active]="activeTab==='audit'" (click)="setTab('audit')">
+        <mat-icon>history_edu</mat-icon> Auditoría
+      </button>
+    }
+  </div>
+
+  <!-- TAB: USUARIOS -->
+  @if (activeTab === 'users') {
+  <div class="ap-content">
+
+    <div class="ap-section-bar">
+      <h2 class="ap-section-title">Usuarios del sistema</h2>
+      <div class="flex gap-2">
+        <button class="ap-btn-cancel" (click)="toggleInvitePanel()" [class.bg-slate-100]="showInvitePanel">
+          <mat-icon>mail</mat-icon> Invitar usuario
+        </button>
+        <button class="ap-btn-primary" (click)="openCreateUser()">
+          <mat-icon>person_add</mat-icon> Nuevo usuario
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL INVITACIÓN -->
+    @if (showInvitePanel) {
+    <div class="ap-form-card invite-panel">
+      <h3 class="ap-form-title"><mat-icon>mail</mat-icon> Invitar nuevo usuario</h3>
+      <p class="text-sm text-slate-500 mb-4">Envía un enlace de registro al correo del técnico o empleado.</p>
+      <div class="flex gap-2 items-end">
+        <div class="ap-field flex-grow">
+          <label class="ap-label">Correo electrónico</label>
+          <input class="ap-input" type="email" [(ngModel)]="inviteEmail" placeholder="correo@ejemplo.com" />
+        </div>
+        <button class="ap-btn-primary whitespace-nowrap" [disabled]="inviting" (click)="sendInvite()">
+          @if (inviting) { <mat-spinner diameter="16"></mat-spinner> }
+          @else { <mat-icon>send</mat-icon> Generar Link }
+        </button>
+      </div>
+      @if (lastInviteUrl) {
+        <div class="mt-4 p-3 bg-slate-50 rounded border border-slate-200">
+          <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Enlace generado:</label>
+          <div class="flex items-center gap-2">
+            <code class="text-xs bg-white p-2 rounded border flex-grow truncate">{{ lastInviteUrl }}</code>
+            <button class="ap-btn-icon" [class.text-emerald-500]="copiedLink" (click)="copyInviteUrl()" title="Copiar enlace">
+              <mat-icon>{{ copiedLink ? 'check_circle' : 'content_copy' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+    }
+
+    <!-- FORMULARIO CREAR / EDITAR USUARIO -->
+    @if (showUserForm) {
+    <div class="ap-form-card">
+      <h3 class="ap-form-title">
+        <mat-icon>{{ editingUser ? 'edit' : 'person_add' }}</mat-icon>
+        {{ editingUser ? 'Editar usuario' : 'Nuevo usuario' }}
+      </h3>
+
+      <div class="ap-form-grid">
+        <div class="ap-field">
+          <label class="ap-label">Nombre completo <span class="req">*</span></label>
+          <input class="ap-input" type="text" [(ngModel)]="uName" placeholder="Nombre y apellidos" />
+        </div>
+        <div class="ap-field">
+          <label class="ap-label">Email <span class="req">*</span></label>
+          <input class="ap-input" type="email" [(ngModel)]="uEmail" placeholder="usuario@empresa.com" />
+        </div>
+        <div class="ap-field">
+          <label class="ap-label">Rol <span class="req">*</span></label>
+          <select class="ap-select" [(ngModel)]="uRole">
+            <option value="ROLE_USER">Empleado</option>
+            <option value="ROLE_AGENT">Agente</option>
+            <option value="ROLE_ADMIN">Administrador</option>
+          </select>
+        </div>
+        @if (!editingUser) {
+        <div class="ap-field">
+          <label class="ap-label">Contraseña inicial <span class="req">*</span></label>
+          <input class="ap-input" type="password" [(ngModel)]="uPassword" placeholder="Mínimo 8 caracteres" />
+        </div>
+        }
+        @if (editingUser) {
+        <div class="ap-field">
+          <label class="ap-label">Nueva contraseña <span class="ap-optional">(dejar vacío para no cambiar)</span></label>
+          <input class="ap-input" type="password" [(ngModel)]="uNewPassword" placeholder="Mínimo 8 caracteres" />
+        </div>
+        }
+      </div>
+
+      <div class="ap-form-actions">
+        <button class="ap-btn-cancel" (click)="cancelUserForm()">Cancelar</button>
+        <button class="ap-btn-primary" [disabled]="savingUser" (click)="saveUser()">
+          @if (savingUser) { <mat-spinner diameter="16"></mat-spinner> }
+          @else { <mat-icon>save</mat-icon> {{ editingUser ? 'Guardar cambios' : 'Crear usuario' }} }
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- TABLA USUARIOS -->
+    @if (loadingUsers) {
+    <div class="ap-loading"><mat-spinner diameter="36"></mat-spinner></div>
+    } @else {
+    <div class="ap-table-wrap">
+      <table class="ap-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Alta</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of users; track u.id) {
+          <tr [class.row-inactive]="!u.isActive">
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ u.name.charAt(0).toUpperCase() }}</div>
+                <span class="user-name">{{ u.name }}</span>
+              </div>
+            </td>
+            <td class="cell-email">{{ u.email }}</td>
+            <td>
+              <span class="role-pill" [ngClass]="'role-'+u.role.toLowerCase().replace('role_','')">
+                {{ roleLabel(u.role) }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [class.active]="u.isActive">
+                {{ u.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="cell-date">{{ u.createdAt }}</td>
+            <td class="col-actions">
+              <div class="action-btns">
+                <button class="ap-btn-icon" title="Editar" (click)="openEditUser(u)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button class="ap-btn-icon" [class.btn-danger]="u.isActive"
+                  [title]="u.isActive ? 'Desactivar' : 'Activar'" (click)="toggleUser(u)">
+                  <mat-icon>{{ u.isActive ? 'person_off' : 'person' }}</mat-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          @if (users.length === 0) {
+          <tr><td colspan="6" class="ap-empty">No hay usuarios registrados</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- TAB: ASIGNACIÓN (MATRIX) -->
+  @if (activeTab === 'matrix') {
+  <div class="ap-content">
+    <div class="ap-section-bar">
+      <h2 class="ap-section-title">Asignación de Técnicos</h2>
+      <p class="ap-section-sub">Configura para qué empresas y categorías puede trabajar cada agente</p>
+    </div>
+
+    @if (loadingUsers) {
+      <div class="ap-loading"><mat-spinner diameter="36"></mat-spinner></div>
+    } @else {
+      <div class="agents-grid">
+        @for (u of agents; track u.id) {
+        <div class="agent-card" [class.expanded]="isAgentExpanded(u.id)">
+          
+          <div class="agent-card-header" (click)="toggleAgentCard(u.id)">
+            <div class="user-cell">
+              <div class="user-avatar">{{ u.name.charAt(0).toUpperCase() }}</div>
+              <div>
+                <div class="user-name">{{ u.name }}</div>
+                <div class="role-pill text-[10px] mt-1" [ngClass]="'role-'+u.role.toLowerCase().replace('role_','')">
+                  {{ roleLabel(u.role) }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="agent-summary hidden md:block text-xs text-slate-500">
+              <span title="{{ agentCompanyNames(u) }}"><mat-icon class="text-[14px] align-middle">business</mat-icon> {{ u.companies?.length || 0 }} empresas</span>
+              <span class="mx-2">|</span>
+              <span title="{{ agentCategoryNames(u) }}"><mat-icon class="text-[14px] align-middle">category</mat-icon> {{ u.categories?.length || 0 }} cat.</span>
+            </div>
+            
+            <mat-icon class="expand-icon">{{ isAgentExpanded(u.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </div>
+
+          @if (isAgentExpanded(u.id)) {
+          <div class="agent-card-body p-6 bg-slate-50 border-t border-slate-100 relative">
+            @if (savingMatrixId === u.id) {
+              <div class="absolute right-4 top-4 z-10"><mat-spinner diameter="16"></mat-spinner></div>
+            }
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              
+              <!-- COLUMNA IZQUIERDA: EMPRESAS ASIGNADAS -->
+              <div class="lg:col-span-4 lg:border-r border-slate-200 lg:pr-4">
+                <h4 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider flex items-center gap-2">
+                  <mat-icon class="text-slate-400">domain</mat-icon> Proyectos
+                </h4>
+                
+                <div class="flex flex-col gap-2 mb-4">
+                  @for (comp of u.companies; track comp.id) {
+                    <div class="flex items-center group">
+                      <button 
+                        class="flex-grow text-left px-3 py-2 rounded-l-md border transition-colors flex items-center gap-2"
+                        [class.bg-blue-50]="agentSelectedCompany[u.id] === comp.id"
+                        [class.border-blue-200]="agentSelectedCompany[u.id] === comp.id"
+                        [class.text-blue-700]="agentSelectedCompany[u.id] === comp.id"
+                        [class.bg-white]="agentSelectedCompany[u.id] !== comp.id"
+                        [class.border-slate-200]="agentSelectedCompany[u.id] !== comp.id"
+                        [class.hover:bg-slate-50]="agentSelectedCompany[u.id] !== comp.id"
+                        (click)="agentSelectedCompany[u.id] = comp.id">
+                        <mat-icon class="text-[18px]">business</mat-icon>
+                        <span class="text-sm font-medium truncate">{{ comp.name }}</span>
+                      </button>
+                      <button class="px-2 py-2 border border-l-0 border-slate-200 rounded-r-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                              title="Desasignar proyecto"
+                              (click)="toggleMatrix(u, 'comp', comp.id); agentSelectedCompany[u.id] = ''">
+                        <mat-icon class="text-[18px]">close</mat-icon>
+                      </button>
+                    </div>
+                  }
+                  @if (!u.companies || u.companies.length === 0) {
+                    <div class="p-4 text-center border border-dashed border-slate-300 rounded-lg text-slate-500 text-sm bg-white">
+                      No está asignado a ninguna empresa.
+                    </div>
+                  }
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-slate-200">
+                  <label class="text-xs text-slate-500 font-semibold mb-2 block">Añadir a un nuevo proyecto</label>
+                  <select class="ap-select text-sm w-full" #newCompSelect (change)="assignNewCompany(u, newCompSelect)">
+                    <option value="">— Selecciona una empresa —</option>
+                    @for (c of companies; track c.id) {
+                      @if (!hasCompany(u, c.id)) {
+                        <option [value]="c.id">{{ c.name }}</option>
+                      }
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <!-- COLUMNA DERECHA: CATEGORÍAS -->
+              <div class="lg:col-span-8 lg:pl-2 pt-4 lg:pt-0">
+                @if (agentSelectedCompany[u.id]) {
+                  <div class="flex flex-wrap items-center justify-between mb-4 gap-2">
+                    <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                      <mat-icon class="text-slate-400">category</mat-icon> Categorías Permitidas
+                    </h4>
+                    
+                    @if (getAgentCategories(agentSelectedCompany[u.id]).length > 0) {
+                      <label class="flex items-center gap-2 cursor-pointer bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 hover:bg-blue-100 transition-colors m-0">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                          [checked]="hasAllCategories(u, agentSelectedCompany[u.id])"
+                          (change)="toggleAllCategories(u, agentSelectedCompany[u.id], $any($event.target).checked)">
+                        <span class="text-xs font-bold text-blue-700">Seleccionar todas</span>
+                      </label>
+                    }
+                  </div>
+
+                  <div class="chip-container mt-2">
+                    @for (cat of getAgentCategories(agentSelectedCompany[u.id]); track cat.id) {
+                      <button class="chip-tag" [class.active]="hasCategory(u, cat.id)" (click)="toggleMatrix(u, 'cat', cat.id)">
+                        {{ cat.name }}
+                        <mat-icon>{{ hasCategory(u, cat.id) ? 'check' : 'add' }}</mat-icon>
+                      </button>
+                    }
+                    @if (getAgentCategories(agentSelectedCompany[u.id]).length === 0) {
+                      <div class="w-full p-6 text-center text-slate-400 border border-dashed border-slate-200 rounded-xl bg-white">
+                        <mat-icon class="text-3xl mb-2 opacity-50">category</mat-icon>
+                        <p class="text-sm">Esta empresa aún no tiene categorías configuradas.</p>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="h-full flex flex-col items-center justify-center text-slate-400 py-10 bg-white border border-dashed border-slate-200 rounded-xl">
+                    <mat-icon class="text-4xl mb-3 opacity-30">business</mat-icon>
+                    <p class="text-sm">Selecciona una empresa del panel izquierdo para configurar sus categorías.</p>
+                  </div>
+                }
+              </div>
+
+            </div>
+          </div>
+          }
+        </div>
+        }
+        @if (agents.length === 0) {
+          <div class="ap-empty-list">No hay agentes configurados.</div>
+        }
+      </div>
+    }
+  </div>
+  }
+
+  <!-- TAB: PROYECTOS/EMPRESAS -->
+  @if (activeTab === 'projects') {
+  <div class="ap-content">
+    
+    @if (projectView === 'list') {
+      <div class="ap-section-bar">
+        <h2 class="ap-section-title">Directorio de Empresas</h2>
+        <button class="ap-btn-primary" (click)="setProjectView('add')">
+          <mat-icon>add_business</mat-icon> Nueva Empresa
+        </button>
+      </div>
+
+      @if (loadingCompanies) {
+        <div class="ap-loading"><mat-spinner diameter="36"></mat-spinner></div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (c of companies; track c.id) {
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-slate-300 transition-colors" (click)="setProjectView('edit', c)">
+              <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                <mat-icon>business</mat-icon>
+              </div>
+              <div class="flex-grow">
+                <div class="font-bold text-slate-700">{{ c.name }}</div>
+                <div class="text-xs text-slate-400">Creada: {{ c.createdAt }}</div>
+              </div>
+              <button class="ap-btn-icon"><mat-icon>chevron_right</mat-icon></button>
+            </div>
+          }
+          @if (companies.length === 0) {
+            <div class="col-span-full text-center p-8 text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+              <mat-icon class="text-4xl mb-2 opacity-20">business</mat-icon>
+              <p>No hay empresas registradas. Crea la primera para empezar a configurar el sistema.</p>
+            </div>
+          }
+        </div>
+      }
+
+    }
+
+    @if (projectView === 'add') {
+      <div class="ap-section-bar">
+        <h2 class="ap-section-title">Añadir Empresa</h2>
+        <button class="ap-btn-cancel" (click)="setProjectView('list')">
+          <mat-icon>arrow_back</mat-icon> Volver
+        </button>
+      </div>
+
+      <div class="ap-form-card max-w-xl mx-auto mt-8">
+        <div class="ap-form-grid">
+          <div class="ap-field">
+            <label class="ap-label">Nombre de la Empresa</label>
+            <input class="ap-input text-lg" [(ngModel)]="compName" placeholder="Ej: TechCorp S.A." />
+          </div>
+        </div>
+        <div class="ap-form-actions mt-4">
+          <button class="ap-btn-cancel" (click)="setProjectView('list')">Cancelar</button>
+          <button class="ap-btn-primary" [disabled]="savingCompany" (click)="saveCompany()">
+            @if (savingCompany) { <mat-spinner diameter="16"></mat-spinner> }
+            @else { <mat-icon>save</mat-icon> Crear y Continuar }
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (projectView === 'edit' && editingCompany) {
+      <div class="ap-company-header">
+        <div class="flex items-center gap-4 mb-6">
+          <button class="ap-btn-icon" (click)="setProjectView('list')" title="Volver al directorio">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <div class="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+            <mat-icon class="text-3xl">business</mat-icon>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">{{ editingCompany.name }}</h2>
+            <p class="text-sm text-slate-500">Panel de configuración del proyecto</p>
+          </div>
+        </div>
+
+        <div class="ap-subtabs flex gap-2 border-b border-slate-200">
+          <button class="px-4 py-2 text-sm font-medium border-b-2 transition-colors" [class.border-blue-500]="companySubTab === 'users'" [class.text-blue-600]="companySubTab === 'users'" [class.border-transparent]="companySubTab !== 'users'" [class.text-slate-500]="companySubTab !== 'users'" (click)="setCompanySubTab('users')">Usuarios</button>
+          <button class="px-4 py-2 text-sm font-medium border-b-2 transition-colors" [class.border-blue-500]="companySubTab === 'cats'" [class.text-blue-600]="companySubTab === 'cats'" [class.border-transparent]="companySubTab !== 'cats'" [class.text-slate-500]="companySubTab !== 'cats'" (click)="setCompanySubTab('cats')">Categorías</button>
+          <button class="px-4 py-2 text-sm font-medium border-b-2 transition-colors" [class.border-blue-500]="companySubTab === 'pris'" [class.text-blue-600]="companySubTab === 'pris'" [class.border-transparent]="companySubTab !== 'pris'" [class.text-slate-500]="companySubTab !== 'pris'" (click)="setCompanySubTab('pris')">Prioridades</button>
+          <button class="px-4 py-2 text-sm font-medium border-b-2 transition-colors" [class.border-blue-500]="companySubTab === 'agents'" [class.text-blue-600]="companySubTab === 'agents'" [class.border-transparent]="companySubTab !== 'agents'" [class.text-slate-500]="companySubTab !== 'agents'" (click)="setCompanySubTab('agents')">Agentes</button>
+        </div>
+      </div>
+
+      <div class="ap-company-body mt-6">
+        
+        <!-- SUBTAB 1: USUARIOS -->
+        @if (companySubTab === 'users') {
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1">
+              <div class="ap-form-card">
+                <h3 class="ap-form-title"><mat-icon>person_add</mat-icon> Invitar Usuario</h3>
+                <p class="text-sm text-slate-500 mb-4">El usuario será asignado automáticamente a esta empresa al registrarse.</p>
+                <div class="ap-field">
+                  <label class="ap-label">Nombre</label>
+                  <input class="ap-input" [(ngModel)]="companyInviteName" placeholder="Juan Pérez" />
+                </div>
+                <div class="ap-field">
+                  <label class="ap-label">Email</label>
+                  <input class="ap-input" [(ngModel)]="companyInviteEmail" placeholder="juan@ejemplo.com" />
+                </div>
+                <button class="ap-btn-primary w-full justify-center mt-2" [disabled]="inviting" (click)="sendCompanyInvite()">
+                  @if (inviting) { <mat-spinner diameter="16"></mat-spinner> }
+                  @else { Generar Invitación }
+                </button>
+                @if (lastInviteUrl) {
+                  <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm break-all">
+                    <p class="font-bold text-green-800 mb-1">Enlace generado:</p>
+                    <a [href]="lastInviteUrl" target="_blank" class="text-green-700 underline">{{ lastInviteUrl }}</a>
+                  </div>
+                }
+              </div>
+            </div>
+            
+            <div class="lg:col-span-2">
+              <div class="ap-form-card">
+                <h3 class="ap-form-title mb-4"><mat-icon>groups</mat-icon> Usuarios de {{ editingCompany.name }}</h3>
+                <div class="ap-items-list border-none shadow-none mt-0">
+                  @for (u of usersForCompany; track u.id) {
+                    <div class="ap-item p-3 border-b border-slate-100 last:border-0 flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                          {{ u.name.charAt(0) | uppercase }}
+                        </div>
+                        <div>
+                          <div class="font-semibold text-slate-700">{{ u.name }}</div>
+                          <div class="text-xs text-slate-500 mb-1">{{ u.email }}</div>
+                          <div class="flex flex-wrap gap-1">
+                            @if (u.roles.includes('ROLE_AGENT') || u.roles.includes('ROLE_ADMIN')) {
+                              <!-- Agentes/Admins: Mostrar categorías asignadas (Matriz) -->
+                              @for (cat of u.categories; track cat.id) {
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] rounded-full border border-blue-200">{{ cat.name }}</span>
+                              }
+                              @if (u.categories?.length === 0) {
+                                <span class="text-[10px] text-slate-400 italic">Sin categorías asignadas (usar Matriz)</span>
+                              }
+                            } @else {
+                              <!-- Empleados: Tienen acceso a todas las categorías de la empresa por defecto -->
+                              <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] rounded-full border border-emerald-100 flex items-center gap-1">
+                                <mat-icon class="text-[10px] w-3 h-3">check_circle</mat-icon>
+                                Acceso a todas las categorías del proyecto
+                              </span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      <div class="text-xs text-slate-400">Registrado el {{ u.createdAt }}</div>
+                    </div>
+                  }
+                  @if (usersForCompany.length === 0) {
+                    <div class="p-6 text-center text-slate-400 text-sm">No hay usuarios asignados a esta empresa.</div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- SUBTAB 2: CATEGORÍAS -->
+        @if (companySubTab === 'cats') {
+          <div class="ap-section-bar mb-4">
+            <h3 class="ap-section-title">Categorías de {{ editingCompany.name }}</h3>
+            <button class="ap-btn-primary" (click)="openCreateCat(); catCompanyId = editingCompany.id">
+              <mat-icon>add</mat-icon> Nueva
+            </button>
+          </div>
+
+          @if (showCatForm) {
+            <div class="ap-form-card mb-6 border-blue-200 bg-blue-50/30">
+              <div class="ap-form-row">
+                <div class="ap-field ap-field-grow">
+                  <label class="ap-label">Nombre <span class="req">*</span></label>
+                  <input class="ap-input" type="text" [(ngModel)]="catName" placeholder="Ej: Hardware, Software…" />
+                </div>
+                <div class="ap-field ap-field-short">
+                  <label class="ap-label">Orden</label>
+                  <input class="ap-input" type="number" [(ngModel)]="catOrder" min="1" />
+                </div>
+              </div>
+              <div class="ap-form-actions">
+                <button class="ap-btn-cancel" (click)="cancelCatForm()">Cancelar</button>
+                <button class="ap-btn-primary" [disabled]="savingCat" (click)="saveCat()">Guardar</button>
+              </div>
+            </div>
+          }
+
+          <div class="ap-items-list">
+            @for (c of getAgentCategories(editingCompany.id); track c.id) {
+              <div class="ap-item">
+                <div class="ap-item-order">{{ c.sortOrder }}</div>
+                <div class="ap-item-body">
+                  <span class="ap-item-name">{{ c.name }}</span>
+                </div>
+                <div class="ap-item-actions">
+                  <button class="ap-btn-icon" title="Editar" (click)="openEditCat(c)"><mat-icon>edit</mat-icon></button>
+                  <button class="ap-btn-icon btn-danger" title="Eliminar" [disabled]="deletingCatId === c.id" (click)="deleteCat(c)">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
+            @if (getAgentCategories(editingCompany.id).length === 0) {
+              <div class="ap-empty-list p-8 text-center text-slate-400">Esta empresa no tiene categorías.</div>
+            }
+          </div>
+        }
+
+        <!-- SUBTAB 3: PRIORIDADES -->
+        @if (companySubTab === 'pris') {
+          <div class="ap-section-bar mb-4">
+            <h3 class="ap-section-title">Prioridades de {{ editingCompany.name }}</h3>
+            <button class="ap-btn-primary" (click)="openCreatePri(); priCompanyId = editingCompany.id">
+              <mat-icon>add</mat-icon> Nueva
+            </button>
+          </div>
+
+          @if (showPriForm) {
+            <div class="ap-form-card mb-6 border-blue-200 bg-blue-50/30">
+              <div class="ap-form-row">
+                <div class="ap-field ap-field-grow">
+                  <label class="ap-label">Nombre <span class="req">*</span></label>
+                  <input class="ap-input" type="text" [(ngModel)]="priName" placeholder="Ej: Crítica, Alta…" />
+                </div>
+                <div class="ap-field ap-field-short">
+                  <label class="ap-label">Orden</label>
+                  <input class="ap-input" type="number" [(ngModel)]="priOrder" min="1" />
+                </div>
+                <div class="ap-field ap-field-short">
+                  <label class="ap-label">SLA (horas)</label>
+                  <input class="ap-input" type="number" [(ngModel)]="priSla" min="0" />
+                </div>
+              </div>
+              <div class="ap-form-actions">
+                <button class="ap-btn-cancel" (click)="cancelPriForm()">Cancelar</button>
+                <button class="ap-btn-primary" [disabled]="savingPri" (click)="savePri()">Guardar</button>
+              </div>
+            </div>
+          }
+
+          <div class="ap-items-list">
+            @for (p of priorities; track p.id) {
+              @if (p.companyId === editingCompany.id) {
+                <div class="ap-item">
+                  <div class="ap-item-order">{{ p.sortOrder }}</div>
+                  <div class="ap-item-body">
+                    <span class="ap-item-name">{{ p.name }}</span>
+                    @if (p.slaHours) {
+                      <span class="ap-item-sla"><mat-icon>schedule</mat-icon> {{ p.slaHours }}h</span>
+                    }
+                  </div>
+                  <div class="ap-item-actions">
+                    <button class="ap-btn-icon" title="Editar" (click)="openEditPri(p)"><mat-icon>edit</mat-icon></button>
+                    <button class="ap-btn-icon btn-danger" title="Eliminar" [disabled]="deletingPriId === p.id" (click)="deletePri(p)">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        }
+
+        <!-- SUBTAB 4: AGENTES -->
+        @if (companySubTab === 'agents') {
+          <div class="ap-form-card">
+            <h3 class="ap-form-title mb-4"><mat-icon>engineering</mat-icon> Agentes asignados</h3>
+            <p class="text-sm text-slate-500 mb-6">Activa el interruptor para asignar a un agente a este proyecto. Podrá ver las incidencias de {{ editingCompany.name }}.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (agent of agents; track agent.id) {
+                <div class="p-4 border rounded-lg flex items-center justify-between transition-colors" 
+                     [class.border-blue-400]="hasCompany(agent, editingCompany.id)"
+                     [class.bg-blue-50]="hasCompany(agent, editingCompany.id)">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+                      {{ agent.name.charAt(0) | uppercase }}
+                    </div>
+                    <div>
+                      <div class="font-semibold text-slate-800">{{ agent.name }}</div>
+                      <div class="text-xs text-slate-500">{{ agent.role }}</div>
+                    </div>
+                  </div>
+                  
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" class="sr-only peer" 
+                           [checked]="hasCompany(agent, editingCompany.id)"
+                           (change)="toggleMatrix(agent, 'comp', editingCompany.id)"
+                           [disabled]="savingMatrixId === agent.id">
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                  </label>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+  }
+
+  <!-- TAB: APARIENCIA (UI) -->
+  @if (activeTab === 'ui') {
+  <div class="ap-content">
+    <div class="ap-section-bar">
+      <h2 class="ap-section-title">Personalización y Branding</h2>
+    </div>
+
+    @if (settingsMsg) {
+      <div class="ap-msg-success"><mat-icon>check_circle</mat-icon> {{ settingsMsg }}</div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- COLORES -->
+      <div class="ap-form-card">
+        <h3 class="ap-form-title"><mat-icon>brush</mat-icon> Colores de Marca</h3>
+        <div class="space-y-4 mt-4">
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+            <div>
+              <span class="text-sm font-medium block">Color Primario</span>
+              <code class="text-xs text-slate-400">{{ primaryColor }}</code>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded border border-white shadow-sm" [style.background]="primaryColor"></div>
+              <input type="color" [(ngModel)]="primaryColor" class="w-10 h-10 rounded cursor-pointer border-0" title="Elegir color primario" />
+            </div>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+            <div>
+              <span class="text-sm font-medium block">Color Secundario</span>
+              <code class="text-xs text-slate-400">{{ secondaryColor }}</code>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded border border-white shadow-sm" [style.background]="secondaryColor"></div>
+              <input type="color" [(ngModel)]="secondaryColor" class="w-10 h-10 rounded cursor-pointer border-0" title="Elegir color secundario" />
+            </div>
+          </div>
+          <button class="ap-btn-primary w-full" (click)="saveSystemSettings()">
+            <mat-icon>save</mat-icon> Aplicar colores
+          </button>
+        </div>
+      </div>
+
+      <!-- LOGOTIPO -->
+      <div class="ap-form-card">
+        <h3 class="ap-form-title"><mat-icon>wallpaper</mat-icon> Logotipo y Favicon</h3>
+        <div class="mt-4">
+          @if (logoPreview) {
+            <div class="mb-4 flex justify-center">
+              <img [src]="logoPreview" class="max-h-24 object-contain rounded border p-2 bg-slate-50" alt="Logo preview" />
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 mb-4">
+              <mat-icon class="text-4xl text-slate-300 mb-2">cloud_upload</mat-icon>
+              <p class="text-sm text-slate-500 text-center">Sube tu logo corporativo (PNG/SVG/JPG)</p>
+            </div>
+          }
+          <input #logoInput type="file" class="hidden" accept="image/*" (change)="onLogoSelected($event)" />
+          <button class="ap-btn-primary w-full" (click)="logoInput.click()">
+            <mat-icon>upload</mat-icon> {{ logoFile ? 'Cambiar logotipo' : 'Seleccionar archivo' }}
+          </button>
+          @if (logoFile) {
+            <p class="text-xs text-slate-500 mt-2 text-center">{{ logoFile.name }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- TAB: AUDITORÍA -->
+  @if (activeTab === 'audit') {
+  <div class="ap-content">
+    <div class="ap-section-bar">
+      <h2 class="ap-section-title">Historial de Auditoría</h2>
+      <p class="ap-section-sub">Últimas 100 acciones realizadas en el sistema</p>
+    </div>
+
+    @if (loadingAudit) { <mat-spinner diameter="32"></mat-spinner> }
+    @else {
+      <div class="ap-table-wrap">
+        <table class="ap-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Acción / Campo</th>
+              <th>Ticket</th>
+              <th>Cambio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of auditLogs; track log.id) {
+              <tr>
+                <td class="whitespace-nowrap text-xs text-slate-500">{{ log.createdAt }}</td>
+                <td class="font-medium text-slate-700">{{ log.changedBy }}</td>
+                <td><span class="px-2 py-0.5 bg-slate-100 rounded text-xs text-slate-600">{{ log.field }}</span></td>
+                <td class="max-w-xs truncate text-xs">{{ log.incidentTitle }}</td>
+                <td class="text-xs">
+                  <span class="text-red-400 strike-through">{{ log.oldValue }}</span>
+                  <mat-icon class="text-[14px] align-middle mx-1">arrow_forward</mat-icon>
+                  <span class="text-emerald-500">{{ log.newValue }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+  }
+
+</div>

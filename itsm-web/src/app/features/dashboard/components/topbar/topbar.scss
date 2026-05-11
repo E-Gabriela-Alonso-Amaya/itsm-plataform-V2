@@ -1,0 +1,277 @@
+// ─── TOPBAR ───────────────────────────────────────────────────
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 20px;
+  height: 60px;
+  background: #1e293b;
+  color: #f1f5f9;
+  flex-shrink: 0;
+  z-index: 200;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+  &-logo {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #38bdf8;
+  }
+
+  &-spacer { flex: 1; }
+
+  // ─── NAVEGACIÓN HORIZONTAL ──────────────────────────────────
+  &-nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    height: 100%;
+
+    .nav-link {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+      font-size: 14px;
+      font-weight: 500;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      text-decoration: none;
+
+      &:hover, &.active {
+        color: #f8fafc;
+      }
+
+      .active-indicator {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #38bdf8;
+        border-radius: 3px 3px 0 0;
+        transform: scaleX(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center;
+      }
+
+      &.active .active-indicator {
+        transform: scaleX(1);
+      }
+
+      .dropdown-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        transition: transform 0.2s ease;
+      }
+    }
+
+    .nav-dropdown {
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: center;
+
+      &.open .dropdown-icon {
+        transform: rotate(180deg);
+      }
+    }
+
+    // Glassmorphism Dropdown
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      min-width: 200px;
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      padding: 8px 0;
+      z-index: 300;
+      animation: fadeIn 0.2s ease-out;
+
+      .dropdown-item {
+        display: block;
+        padding: 10px 16px;
+        font-size: 14px;
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  &-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      
+      .topbar-name { color: #fff; }
+      .topbar-avatar { background: #475569; }
+    }
+  }
+
+  &-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+    overflow: hidden;
+    
+    &-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &-name { font-size: 13px; color: #cbd5e1; font-weight: 500; }
+
+  &-exit {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #94a3b8;
+    transition: all 0.2s;
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+    &:hover { 
+      background: rgba(239, 68, 68, 0.1); 
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// ─── BOTONES MÓVIL/TABLET ───────────────
+.hamburger-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  background: transparent;
+  border: 0.5px solid #334155;
+  color: #94a3b8;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  &:hover { background: #334155; }
+}
+
+.company-drawer-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+  &:hover { 
+    background: rgba(56, 189, 248, 0.2); 
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+  }
+}
+
+// ─── RESPONSIVE ───────────────────────────────────────────────
+@media (max-width: 1024px) {
+  // En tablet mantenemos el nav horizontal, no mostramos el drawer-btn
+}
+
+@media (max-width: 768px) {
+  .topbar { 
+    padding: 0 16px; 
+    gap: 16px; 
+  }
+  .topbar-nav {
+    display: none; // Ocultamos en móvil, se accederá via hamburger
+    
+    &.mobile-open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 100%;
+      background: #1e293b;
+      padding: 16px;
+      gap: 16px;
+      align-items: flex-start;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 150;
+      border-top: 1px solid rgba(255,255,255,0.05);
+
+      .nav-dropdown {
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        
+        .dropdown-menu {
+          position: static;
+          width: 100%;
+          background: transparent;
+          box-shadow: none;
+          border: none;
+          padding-left: 16px;
+        }
+      }
+    }
+  }
+  .hamburger-btn { display: flex; }
+  .company-drawer-btn { display: flex; } // Mostramos el botón de empresas
+}
+
+@media (max-width: 600px) {
+  .topbar-name { display: none; }
+  .topbar { padding: 0 12px; gap: 8px; }
+  .topbar-logo { font-size: 14px; }
+}

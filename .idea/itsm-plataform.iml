@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/itsm-api/src" isTestSource="false" packagePrefix="App\" />
+      <sourceFolder url="file://$MODULE_DIR$/itsm-api/tests" isTestSource="true" packagePrefix="App\Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="App\" />
+      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" packagePrefix="App\Tests\" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/composer" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/psr/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/psr/container" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/psr/event-dispatcher" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/psr/log" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/cache-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/config" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/console" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/dependency-injection" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/deprecation-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/dotenv" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/error-handler" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/event-dispatcher" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/event-dispatcher-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/filesystem" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/finder" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/flex" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/framework-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/http-foundation" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/http-kernel" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/polyfill-intl-grapheme" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/polyfill-intl-normalizer" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/polyfill-mbstring" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/polyfill-php83" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/routing" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/runtime" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/service-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/string" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/var-dumper" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/var-exporter" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/yaml" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/collections" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/data-fixtures" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/dbal" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/deprecations" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/doctrine-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/doctrine-fixtures-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/doctrine-migrations-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/event-manager" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/inflector" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/instantiator" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/lexer" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/migrations" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/orm" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/persistence" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/doctrine/sql-formatter" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/lcobucci/jwt" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/lexik/jwt-authentication-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/monolog/monolog" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/nelmio/cors-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/nikic/php-parser" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/phpstan/phpdoc-parser" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/psr/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/asset" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/debug-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/doctrine-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/maker-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/monolog-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/monolog-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/password-hasher" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/polyfill-php84" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/polyfill-uuid" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/process" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/property-access" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/property-info" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/security-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/security-core" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/security-csrf" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/security-http" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/serializer" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/stopwatch" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/translation-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/twig-bridge" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/twig-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/uid" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/validator" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/symfony/web-profiler-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/twig/extra-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/twig/twig" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/zircote/swagger-php" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/nelmio/security-bundle" />
+      <excludeFolder url="file://$MODULE_DIR$/itsm-api/vendor/ua-parser/uap-php" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

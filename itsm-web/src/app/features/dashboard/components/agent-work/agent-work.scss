@@ -1,0 +1,14 @@
+@use '../../styles/shared' as *;
+@use '../../styles/stats' as *;
+@use '../../styles/kanban' as *;
+
+:host {
+  display: block;
+}
+
+// Estilos específicos para el Agente (si los hay)
+.col-header.col-assigned {
+  background: #ede9fe;
+  color: #4c1d95;
+  .col-dot { background: #7c3aed; }
+}
