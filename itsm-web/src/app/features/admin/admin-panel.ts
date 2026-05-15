@@ -138,7 +138,9 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   get visibleTabs(): AdminTab[] {
     if (this.subView.startsWith('admin_users') || this.subView === 'admin_matrix') {
-      return ['users', 'matrix'];
+      const tabs: AdminTab[] = ['users'];
+      if (this.selectedCompany === 'global') tabs.push('matrix');
+      return tabs;
     }
     if (this.subView === 'admin_projects' || this.subView === 'admin_config_tech') {
       return ['projects'];
@@ -651,6 +653,11 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   }
 
   private handleCompanyChange(): void {
+    const tabs = this.visibleTabs;
+    if (this.activeTab === 'matrix' && !tabs.includes('matrix')) {
+      this.setTab('users');
+    }
+
     if (this.activeTab === 'projects' || this.subView === 'admin_projects' || this.subView === 'admin_config_tech') {
       if (this.selectedCompany === 'global') {
         this.setProjectView('list');
