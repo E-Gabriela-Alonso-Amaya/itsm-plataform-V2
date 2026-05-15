@@ -120,6 +120,9 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     if (changes['subView']) {
       this.syncSubView();
     }
+    if (changes['selectedCompany']) {
+      this.handleCompanyChange();
+    }
   }
 
   // ── Configuración de Vistas ───────────────────────────────────
@@ -637,9 +640,27 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   loadCompanies(): void {
     this.loadingCompanies = true;
     this.adminService.getCompanies().subscribe({
-      next: (data) => { this.companies = data; this.loadingCompanies = false; this.cdr.detectChanges(); },
+      next: (data) => { 
+        this.companies = data; 
+        this.loadingCompanies = false; 
+        this.handleCompanyChange();
+        this.cdr.detectChanges(); 
+      },
       error: () => { this.errorMsg = 'Error al cargar empresas'; this.loadingCompanies = false; this.cdr.detectChanges(); }
     });
+  }
+
+  private handleCompanyChange(): void {
+    if (this.activeTab === 'projects' || this.subView === 'admin_projects' || this.subView === 'admin_config_tech') {
+      if (this.selectedCompany === 'global') {
+        this.setProjectView('list');
+      } else {
+        const comp = this.companies.find(c => c.id === this.selectedCompany);
+        if (comp) {
+          this.setProjectView('edit', comp);
+        }
+      }
+    }
   }
 
   setProjectView(view: 'add' | 'list' | 'edit', company: any = null): void {
