@@ -1,8 +1,13 @@
-<div class="view-header mb-8">
+<div class="view-header mb-8 flex justify-between items-center">
   <div>
     <h1 class="text-2xl font-bold text-slate-800">Mi Trabajo</h1>
     <p class="text-slate-500">Gestión de tus tickets asignados y métricas personales</p>
   </div>
+  <button class="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm"
+    (click)="goToCreate.emit()">
+    <mat-icon class="text-sm">add</mat-icon>
+    Nueva Incidencia
+  </button>
 </div>
 
 <!-- MÉTRICAS AGENTE -->
@@ -53,8 +58,24 @@
   </div>
 </div>
 
-<!-- KANBAN 5 COLUMNAS PARA AGENTE -->
+<!-- FILTROS Y KANBAN 5 COLUMNAS PARA AGENTE -->
 <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm overflow-x-auto">
+  <div class="kanban-filters mb-6">
+    <select class="f-select-sm" [(ngModel)]="filterPriority" (change)="onFilterChange()">
+      <option value="">Todas las prioridades</option>
+      @for (p of priorities; track p.id) { <option [value]="p.name">{{ p.name }}</option> }
+    </select>
+    <select class="f-select-sm" [(ngModel)]="filterCategory" (change)="onFilterChange()">
+      <option value="">Todas las categorías</option>
+      @for (c of categories; track c.id) { <option [value]="c.name">{{ c.name }}</option> }
+    </select>
+    @if (filterPriority || filterCategory) {
+    <button class="btn-clear-filter" (click)="clearFilters.emit()">
+      <mat-icon>close</mat-icon> Limpiar
+    </button>
+    }
+  </div>
+  
   <div class="kanban-board kanban-5col">
     <!-- DISPONIBLES -->
     <div class="kanban-col">

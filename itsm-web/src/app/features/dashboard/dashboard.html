@@ -42,9 +42,16 @@
             [colInProgress]="colInProgress"
             [colWaiting]="colWaiting"
             [colDone]="colDone"
+            [priorities]="priorities"
+            [categories]="categories"
+            [filterPriority]="filterPriority"
+            [filterCategory]="filterCategory"
             (openDrawer)="openDrawer($event)"
             (assign)="assign($event)"
             (updateStatus)="changeTicketStatus($event.ticket, $event.status)"
+            (goToCreate)="goToCreate()"
+            (loadQueue)="loadQueue()"
+            (clearFilters)="clearFilters()"
           ></app-agent-work>
         }
 

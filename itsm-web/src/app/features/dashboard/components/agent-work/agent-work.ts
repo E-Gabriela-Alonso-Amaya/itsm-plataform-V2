@@ -1,12 +1,13 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { Incident, User } from '../../../../shared/models/user.model';
+import { Incident, User, Priority, Category } from '../../../../shared/models/user.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-agent-work',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, FormsModule],
   templateUrl: './agent-work.html',
   styleUrl: './agent-work.scss',
 })
@@ -20,10 +21,22 @@ export class AgentWorkComponent {
   @Input() colInProgress: Incident[] = [];
   @Input() colWaiting: Incident[] = [];
   @Input() colDone: Incident[] = [];
+  
+  @Input() priorities: Priority[] = [];
+  @Input() categories: Category[] = [];
+  @Input() filterPriority: string = '';
+  @Input() filterCategory: string = '';
 
   @Output() openDrawer = new EventEmitter<Incident>();
   @Output() assign = new EventEmitter<Incident>();
   @Output() updateStatus = new EventEmitter<{ticket: Incident, status: string}>();
+  @Output() goToCreate = new EventEmitter<void>();
+  @Output() loadQueue = new EventEmitter<void>();
+  @Output() clearFilters = new EventEmitter<void>();
+
+  onFilterChange() {
+    this.loadQueue.emit();
+  }
 
   getPriorityClass(priority: string): string {
     const map: Record<string, string> = {
