@@ -55,6 +55,13 @@
 
     <div class="ap-section-bar">
       <h2 class="ap-section-title">Usuarios del sistema</h2>
+      <div class="flex-grow max-w-md mx-4">
+        <div class="relative">
+          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+          <input class="ap-input !pl-10 !h-10 !rounded-full !bg-slate-50 border-transparent focus:!bg-white" 
+                 type="text" [(ngModel)]="userSearchQuery" placeholder="Buscar por nombre o email..." />
+        </div>
+      </div>
       <div class="flex gap-2">
         <button class="ap-btn-cancel" (click)="toggleInvitePanel()" [class.bg-slate-100]="showInvitePanel">
           <mat-icon>mail</mat-icon> Invitar usuario
@@ -208,14 +215,21 @@
   <div class="ap-content">
     <div class="ap-section-bar">
       <h2 class="ap-section-title">Asignación de Técnicos</h2>
-      <p class="ap-section-sub">Configura para qué empresas y categorías puede trabajar cada agente</p>
+      <div class="flex-grow max-w-md mx-4">
+        <div class="relative">
+          <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+          <input class="ap-input !pl-10 !h-10 !rounded-full !bg-slate-50 border-transparent focus:!bg-white" 
+                 type="text" [(ngModel)]="matrixSearchQuery" placeholder="Buscar agente por nombre..." />
+        </div>
+      </div>
+      <p class="ap-section-sub hidden md:block">Configura para qué empresas y categorías puede trabajar cada agente</p>
     </div>
 
     @if (loadingUsers) {
       <div class="ap-loading"><mat-spinner diameter="36"></mat-spinner></div>
     } @else {
       <div class="agents-grid">
-        @for (u of agents; track u.id) {
+        @for (u of filteredMatrixAgents; track u.id) {
         <div class="agent-card" [class.expanded]="isAgentExpanded(u.id)">
           
           <div class="agent-card-header" (click)="toggleAgentCard(u.id)">
@@ -354,6 +368,13 @@
     @if (projectView === 'list') {
       <div class="ap-section-bar">
         <h2 class="ap-section-title">Directorio de Empresas</h2>
+        <div class="flex-grow max-w-md mx-4">
+          <div class="relative">
+            <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+            <input class="ap-input !pl-10 !h-10 !rounded-full !bg-slate-50 border-transparent focus:!bg-white" 
+                   type="text" [(ngModel)]="projectSearchQuery" placeholder="Buscar empresa por nombre..." />
+          </div>
+        </div>
         <button class="ap-btn-primary" (click)="setProjectView('add')">
           <mat-icon>add_business</mat-icon> Nueva Empresa
         </button>
@@ -363,7 +384,7 @@
         <div class="ap-loading"><mat-spinner diameter="36"></mat-spinner></div>
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          @for (c of companies; track c.id) {
+          @for (c of filteredCompanies; track c.id) {
             <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:border-slate-300 transition-colors" (click)="setProjectView('edit', c)">
               <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
                 <mat-icon>business</mat-icon>

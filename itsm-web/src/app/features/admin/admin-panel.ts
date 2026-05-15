@@ -104,9 +104,11 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   secondaryColor = '#64748b';
   logoFile: File | null = null;
   logoPreview: string | null = null;
-  savingSettings = false;
   settingsMsg = '';
   goalResolutionTime: number = 2;
+  userSearchQuery: string = '';
+  projectSearchQuery: string = '';
+  matrixSearchQuery: string = '';
 
   constructor(
     private adminService: AdminService,
@@ -200,12 +202,44 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   }
 
   get filteredUsers(): AdminUser[] {
+    let list: AdminUser[] = [];
     if (this.selectedCompany === 'global') {
       // En Global mostramos técnicos y administradores
-      return this.users.filter(u => u.role === 'ROLE_ADMIN' || u.role === 'ROLE_AGENT');
+      list = this.users.filter(u => u.role === 'ROLE_ADMIN' || u.role === 'ROLE_AGENT');
+    } else {
+      // En una empresa mostramos SOLO los empleados registrados a esa empresa
+      list = this.users.filter(u => u.role === 'ROLE_USER' && this.hasCompany(u, this.selectedCompany));
     }
-    // En una empresa mostramos SOLO los empleados registrados a esa empresa
-    return this.users.filter(u => u.role === 'ROLE_USER' && this.hasCompany(u, this.selectedCompany));
+
+    if (this.userSearchQuery.trim()) {
+      const q = this.userSearchQuery.toLowerCase().trim();
+      list = list.filter(u => 
+        u.name.toLowerCase().includes(q) || 
+        u.email.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  get filteredCompanies(): any[] {
+    let list = this.companies;
+    if (this.projectSearchQuery.trim()) {
+      const q = this.projectSearchQuery.toLowerCase().trim();
+      list = list.filter(c => c.name.toLowerCase().includes(q));
+    }
+    return list;
+  }
+
+  get filteredMatrixAgents(): AdminUser[] {
+    let list = this.agents;
+    if (this.matrixSearchQuery.trim()) {
+      const q = this.matrixSearchQuery.toLowerCase().trim();
+      list = list.filter(a => 
+        a.name.toLowerCase().includes(q) || 
+        a.email.toLowerCase().includes(q)
+      );
+    }
+    return list;
   }
 
   openEditUser(u: AdminUser): void {
