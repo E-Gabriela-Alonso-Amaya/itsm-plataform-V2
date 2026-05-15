@@ -20,6 +20,7 @@ type AdminTab = 'users' | 'matrix' | 'projects' | 'ui' | 'audit';
 })
 export class AdminPanelComponent implements OnInit, OnChanges {
   @Input() subView: string = 'admin';
+  @Input() selectedCompany: string = 'global';
   activeTab: AdminTab = 'users';
 
   // ── Mensajes globales ─────────────────────────────────────────
@@ -190,6 +191,15 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     this.showUserForm = true;
     this.showInvitePanel = false;
     this.clearMsg();
+  }
+
+  get filteredUsers(): AdminUser[] {
+    if (this.selectedCompany === 'global') {
+      // En Global mostramos técnicos y administradores
+      return this.users.filter(u => u.role === 'ROLE_ADMIN' || u.role === 'ROLE_AGENT');
+    }
+    // En una empresa mostramos SOLO los empleados registrados a esa empresa
+    return this.users.filter(u => u.role === 'ROLE_USER' && this.hasCompany(u, this.selectedCompany));
   }
 
   openEditUser(u: AdminUser): void {

@@ -155,7 +155,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (u of users; track u.id) {
+          @for (u of filteredUsers; track u.id) {
           <tr [class.row-inactive]="!u.isActive">
             <td>
               <div class="user-cell">

@@ -59,7 +59,7 @@
 
         <!-- VISTA: ADMIN PANEL -->
         @if (activeView.startsWith('admin_')) {
-          <app-admin-panel [subView]="activeView"></app-admin-panel>
+          <app-admin-panel [subView]="activeView" [selectedCompany]="selectedCompany"></app-admin-panel>
         }
 
         <!-- VISTA: DASHBOARD -->
