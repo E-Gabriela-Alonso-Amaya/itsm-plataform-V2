@@ -192,7 +192,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // PERFIL (Movido a ProfileComponent)
 
   get myCreatedTickets(): Incident[] {
-    return [...this.incidentsOpenAdmin, ...this.incidentsResolvedAdmin].sort((a, b) => 
+    return this.incidents.filter(i => i.reportedById === this.user?.id).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  get myWorkedTickets(): Incident[] {
+    return this.incidents.filter(i => i.assignedToId === this.user?.id).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
@@ -413,7 +419,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loadMine();
         this.loadStats();
       } else if (view === 'agent_history') {
-        this.loadMyCreated();
+        this.loadMine();
       }
     } else {
       // Empleado

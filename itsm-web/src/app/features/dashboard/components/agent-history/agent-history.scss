@@ -1,6 +1,51 @@
 @use '../../styles/shared' as *;
-@use '../../styles/table' as *;
+@use '../../styles/kanban' as *;
 
 :host {
   display: block;
+}
+
+.dashboard-tabs {
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  display: flex;
+  gap: 4px;
+
+  .tab {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s;
+
+    &.active {
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    &:hover:not(.active) {
+      background: #e2e8f0;
+    }
+  }
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  &[data-status="Nuevo"], &[data-status="Abierta"] { background: #e0f2fe; color: #0369a1; }
+  &[data-status="Procesando"] { background: #dbeafe; color: #1e40af; }
+  &[data-status="Espera info"], &[data-status="Pendiente"] { background: #fef3c7; color: #92400e; }
+  &[data-status="Resuelto"] { background: #dcfce7; color: #166534; }
+  &[data-status="Cerrado"] { background: #f1f5f9; color: #475569; }
 }

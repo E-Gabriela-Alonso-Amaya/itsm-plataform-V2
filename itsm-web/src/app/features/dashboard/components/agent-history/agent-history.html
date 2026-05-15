@@ -1,52 +1,137 @@
-<div class="view-header mb-6 flex justify-between items-center">
-  <h1 class="text-2xl font-bold text-slate-800">Mis Tickets (Creados por mí)</h1>
-  <button class="ap-btn-primary" (click)="goToCreate.emit()">
-    <mat-icon>add</mat-icon> Nuevo Ticket
-  </button>
+<div class="view-header mb-8">
+  <div class="flex justify-between items-center w-full">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Historial de Incidencias</h1>
+      <p class="text-slate-500">Consulta y busca tickets anteriores</p>
+    </div>
+    <div class="dashboard-tabs bg-slate-100 p-1 rounded-xl">
+      <button class="tab px-6 py-2 rounded-lg text-sm font-bold transition-all" 
+              [class.active]="activeTab === 'worked'" 
+              (click)="activeTab = 'worked'">
+        Trabajadas por mí
+      </button>
+      <button class="tab px-6 py-2 rounded-lg text-sm font-bold transition-all" 
+              [class.active]="activeTab === 'created'" 
+              (click)="activeTab = 'created'">
+        Creadas por mí
+      </button>
+    </div>
+  </div>
 </div>
 
+<!-- BARRA DE FILTROS -->
+<div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <!-- Búsqueda -->
+    <div class="relative">
+      <mat-icon class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</mat-icon>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar por título, ID..." 
+             class="w-full pl-10 pr-4 py-2 bg-slate-50 border-transparent rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-sky-500/20 transition-all" />
+    </div>
+
+    <!-- Prioridad -->
+    <select [(ngModel)]="filterPriority" class="f-select-sm w-full">
+      <option value="">Todas las prioridades</option>
+      @for (p of priorities; track p.id) { <option [value]="p.name">{{ p.name }}</option> }
+    </select>
+
+    <!-- Categoría -->
+    <select [(ngModel)]="filterCategory" class="f-select-sm w-full">
+      <option value="">Todas las categorías</option>
+      @for (c of categories; track c.id) { <option [value]="c.name">{{ c.name }}</option> }
+    </select>
+
+    <!-- Estado -->
+    <select [(ngModel)]="filterStatus" class="f-select-sm w-full">
+      <option value="">Todos los estados</option>
+      <option value="Nuevo">Nuevo</option>
+      <option value="Procesando">Procesando</option>
+      <option value="Espera info">En Espera</option>
+      <option value="Resuelto">Resuelto</option>
+      <option value="Cerrado">Cerrado</option>
+    </select>
+
+    <!-- Fecha Desde -->
+    <div class="flex flex-col">
+      <input type="date" [(ngModel)]="dateFrom" class="f-select-sm w-full" title="Desde fecha" />
+    </div>
+
+    <!-- Fecha Hasta -->
+    <div class="flex flex-col">
+      <input type="date" [(ngModel)]="dateTo" class="f-select-sm w-full" title="Hasta fecha" />
+    </div>
+  </div>
+
+  @if (searchQuery || filterPriority || filterCategory || filterStatus || dateFrom || dateTo) {
+    <div class="mt-4 flex justify-end">
+      <button class="btn-clear-filter" (click)='clearFilters()'>
+        <mat-icon>close</mat-icon> Limpiar filtros
+      </button>
+    </div>
+  }
+</div>
+
+<!-- LISTADO -->
 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
   <div class="overflow-x-auto">
     <table class="w-full text-left border-collapse">
       <thead>
-        <tr class="bg-slate-50/50">
-          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">ID</th>
-          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Asunto</th>
-          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Categoría</th>
-          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Estado</th>
-          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Prioridad</th>
-          <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Fecha</th>
+        <tr class="bg-slate-50/50 border-bottom border-slate-100">
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">ID / Fecha</th>
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Título</th>
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Categoría</th>
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Prioridad</th>
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Reportado por</th>
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Estado</th>
+          <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">Acciones</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-slate-50 text-sm">
-        @for (ticket of tickets; track ticket.id) {
-          <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" (click)="openDrawer.emit(ticket)">
-            <td class="px-6 py-4 font-mono text-xs text-slate-400">#{{ ticket.id.substring(0, 5) }}</td>
-            <td class="px-6 py-4 font-bold text-slate-700">{{ ticket.title }}</td>
-            <td class="px-6 py-4 text-slate-500">{{ ticket.category }}</td>
+      <tbody class="divide-y divide-slate-50">
+        @for (t of filteredTickets; track t.id) {
+          <tr class="hover:bg-slate-50/80 transition-colors group">
             <td class="px-6 py-4">
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold"
-                [class.bg-emerald-50]="ticket.isClosed" [class.text-emerald-600]="ticket.isClosed"
-                [class.bg-sky-50]="!ticket.isClosed" [class.text-sky-600]="!ticket.isClosed">
-                {{ ticket.status }}
-              </span>
+              <div class="text-xs font-bold text-slate-800">#{{ t.id.split('-')[0] }}</div>
+              <div class="text-[10px] text-slate-400">{{ t.createdAt | date:'dd/MM/yyyy HH:mm' }}</div>
             </td>
             <td class="px-6 py-4">
-              <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded" [ngClass]="getPriorityClass(ticket.priority)">
-                {{ ticket.priority }}
-              </span>
+              <div class="text-sm font-semibold text-slate-700 truncate max-w-[200px]" [title]="t.title">{{ t.title }}</div>
             </td>
-            <td class="px-6 py-4 text-slate-400 text-xs">{{ ticket.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
-          </tr>
-        }
-        @if (tickets.length === 0) {
-          <tr>
-            <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">
-              No has creado ningún ticket todavía.
+            <td class="px-6 py-4">
+              <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">{{ t.category }}</span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center text-[10px] font-bold text-sky-600">
+                  {{ t.reportedBy?.charAt(0) }}
+                </div>
+                <span class="text-xs text-slate-600 font-medium">{{ t.reportedBy }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <span class="status-badge" [attr.data-status]="t.status">{{ t.status }}</span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-all ml-auto" 
+                      (click)="openDrawer.emit(t)" title="Ver detalles">
+                <mat-icon class="text-lg">visibility</mat-icon>
+              </button>
             </td>
           </tr>
         }
       </tbody>
     </table>
   </div>
+  
+  @if (filteredTickets.length === 0) {
+    <div class="p-20 text-center">
+      <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+        <mat-icon class="scale-150">history</mat-icon>
+      </div>
+      <h3 class="text-slate-800 font-bold">No se encontraron incidencias</h3>
+      <p class="text-slate-500 text-sm">Prueba a cambiar los filtros o el buscador</p>
+    </div>
+  }
 </div>

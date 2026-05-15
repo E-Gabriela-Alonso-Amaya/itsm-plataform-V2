@@ -58,7 +58,10 @@
         <!-- VISTA: MIS TICKETS (HISTÓRICO AGENTE) -->
         @if (activeView === 'agent_history') {
           <app-agent-history
-            [tickets]="myCreatedTickets"
+            [createdTickets]="myCreatedTickets"
+            [workedTickets]="myWorkedTickets"
+            [priorities]="priorities"
+            [categories]="categories"
             (openDrawer)="openDrawer($event)"
             (goToCreate)="goToCreate()"
           ></app-agent-history>
