@@ -110,6 +110,7 @@
               [colAdminDone]="colAdminDone"
               [currentUserId]="user?.id || ''"
               [currentUserRole]="user?.roles?.[0] || ''"
+              [goalResolutionTime]="goalResolutionTime"
               (setDashboardTab)="adminDashboardTab = $event"
               (loadQueue)="loadQueue()"
               (clearFilters)="clearFilters()"

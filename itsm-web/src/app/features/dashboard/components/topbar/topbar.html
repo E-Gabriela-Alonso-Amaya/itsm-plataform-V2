@@ -23,10 +23,6 @@
           Ajustes del Sistema
           <div class="active-indicator"></div>
         </a>
-        <a class="nav-link" [class.active]="activeView === 'profile'" (click)="onSetView('profile')">
-          Mi Perfil
-          <div class="active-indicator"></div>
-        </a>
       } @else if (isAgent) {
         <a class="nav-link" [class.active]="activeView === 'agent_work' || activeView === 'dashboard'" (click)="onSetView('agent_work')">
           Mi Trabajo
@@ -36,10 +32,6 @@
           Historial
           <div class="active-indicator"></div>
         </a>
-        <a class="nav-link" [class.active]="activeView === 'profile'" (click)="onSetView('profile')">
-          Mi Perfil
-          <div class="active-indicator"></div>
-        </a>
       } @else {
         <a class="nav-link" [class.active]="activeView === 'dashboard'" (click)="onSetView('dashboard')">
           Dashboard
@@ -47,10 +39,6 @@
         </a>
         <a class="nav-link" [class.active]="activeView === 'mine'" (click)="onSetView('mine')">
           Historial
-          <div class="active-indicator"></div>
-        </a>
-        <a class="nav-link" [class.active]="activeView === 'profile'" (click)="onSetView('profile')">
-          Mi Perfil
           <div class="active-indicator"></div>
         </a>
       }

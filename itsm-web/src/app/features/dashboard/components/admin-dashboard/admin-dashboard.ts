@@ -30,6 +30,7 @@ export class AdminDashboardComponent {
   @Input() selectedCompany: string = 'global';
   @Input() currentUserId: string = '';
   @Input() currentUserRole: string = '';
+  @Input() goalResolutionTime: number = 2;
 
   // Kanban Columns
   @Input() colNew: Incident[] = [];
@@ -155,6 +156,24 @@ export class AdminDashboardComponent {
     return Math.min(Math.round((this.totalIncidents / 100) * 100), 100);
   }
 
+  get totalToday(): number {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return this.allCompanyIncidents.filter(i => {
+      const created = new Date(i.createdAt);
+      return created >= today;
+    }).length;
+  }
+
+  get totalPreviousUnresolved(): number {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return this.allCompanyIncidents.filter(i => {
+      const created = new Date(i.createdAt);
+      return created < today && !i.isClosed && i.status !== 'Resuelto' && i.status !== 'Cerrado';
+    }).length;
+  }
+
   /** Determina si se debe mostrar la barra de SLA según el estado */
   shouldShowSla(status: string): boolean {
     const activeStatuses = ['Procesando', 'En progreso', 'Espera info', 'Espera', 'Pendiente', 'Espera información'];
@@ -171,10 +190,6 @@ export class AdminDashboardComponent {
     const ratedIncidents = this.allCompanyIncidents.filter(i => typeof i.rating === 'number' && i.rating > 0);
     
     if (ratedIncidents.length === 0) {
-      // Si no hay valoraciones para esta empresa, verificamos si es la vista global y devolvemos algo, o 'N/A'
-      if (this.selectedCompany === 'global' && this.globalStats?.satisfaction) {
-        return this.globalStats.satisfaction.toString();
-      }
       return '0';
     }
 

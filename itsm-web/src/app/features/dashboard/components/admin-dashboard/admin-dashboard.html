@@ -1,21 +1,29 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
   <!-- KPIs -->
   <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
       <div class="text-xs font-bold text-slate-400 uppercase mb-1">Carga de Trabajo</div>
       <div class="flex items-end gap-2">
-        <div class="text-3xl font-bold text-slate-800">{{ totalIncidents }}</div>
-        <div class="text-xs text-emerald-500 font-medium mb-1">tickets globales</div>
+        <div class="text-3xl font-bold text-slate-800">{{ totalToday + totalPreviousUnresolved }}</div>
+        <div class="text-xs text-slate-500 font-medium mb-1">{{ selectedCompany === 'global' ? 'tickets globales' : 'tickets empresa' }}</div>
       </div>
-      <div class="mt-4 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div class="h-full bg-sky-500" [style.width]="workloadPercentage + '%'"></div>
+      <div class="mt-2 flex flex-col gap-1">
+        <div class="text-[10px] text-slate-400 flex justify-between">
+          <span>Nuevos hoy: {{ totalToday }}</span>
+          @if (totalPreviousUnresolved > 0) {
+            <span class="text-amber-500 font-bold">Pendientes ayer: {{ totalPreviousUnresolved }}</span>
+          }
+        </div>
+        <div class="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full bg-sky-500" [style.width]="workloadPercentage + '%'"></div>
+        </div>
       </div>
     </div>
     <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
       <div class="text-xs font-bold text-slate-400 uppercase mb-1">T. Medio Respuesta</div>
       <div class="text-3xl font-bold text-slate-800">{{ avgResponseTime }}</div>
       <div class="mt-2 flex items-center gap-1 text-xs text-slate-400">
-        <mat-icon class="text-[14px]">bolt</mat-icon> Objetivo: &lt; 2h
+        <mat-icon class="text-[14px]">bolt</mat-icon> Objetivo: &lt; {{ goalResolutionTime }}h
       </div>
     </div>
     <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">

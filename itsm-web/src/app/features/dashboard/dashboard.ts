@@ -201,6 +201,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   agentStats: any = null;
   globalStats: any = null;
   loadingStats = false;
+  
+  get goalResolutionTime(): number {
+    const g = localStorage.getItem('itsm_goal_resolution_time');
+    return g ? parseFloat(g) : 2;
+  }
 
   // RESPONSIVE / UI
   sidebarOpen = false;

@@ -9,7 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminService, AdminUser, CreateUserRequest } from '../../core/services/admin.service';
 import { Category, Priority } from '../../shared/models/user.model';
 
-type AdminTab = 'users' | 'matrix' | 'projects' | 'ui' | 'audit';
+type AdminTab = 'users' | 'matrix' | 'projects' | 'ui' | 'services' | 'audit';
 
 @Component({
   selector: 'app-admin-panel',
@@ -106,6 +106,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   logoPreview: string | null = null;
   savingSettings = false;
   settingsMsg = '';
+  goalResolutionTime: number = 2;
 
   constructor(
     private adminService: AdminService,
@@ -145,7 +146,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     if (this.subView === 'admin_projects' || this.subView === 'admin_config_tech') {
       return ['projects'];
     }
-    return ['ui', 'audit'];
+    return ['ui', 'services', 'audit'];
   }
 
   private syncSubView(): void {
@@ -624,7 +625,8 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     document.documentElement.style.setProperty('--color-secondary', this.secondaryColor);
     localStorage.setItem('itsm_primary_color', this.primaryColor);
     localStorage.setItem('itsm_secondary_color', this.secondaryColor);
-    this.settingsMsg = '✓ Ajustes de apariencia guardados';
+    localStorage.setItem('itsm_goal_resolution_time', this.goalResolutionTime.toString());
+    this.settingsMsg = '✓ Ajustes de apariencia y objetivos guardados';
     setTimeout(() => { this.settingsMsg = ''; this.cdr.detectChanges(); }, 3000);
     this.cdr.detectChanges();
   }
@@ -632,8 +634,10 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   loadSystemColors(): void {
     const p = localStorage.getItem('itsm_primary_color');
     const s = localStorage.getItem('itsm_secondary_color');
+    const g = localStorage.getItem('itsm_goal_resolution_time');
     if (p) { this.primaryColor = p; document.documentElement.style.setProperty('--color-primary', p); }
     if (s) { this.secondaryColor = s; document.documentElement.style.setProperty('--color-secondary', s); }
+    if (g) { this.goalResolutionTime = parseFloat(g); }
   }
 
   // ══════════════════════════════════════════════════════════════

@@ -37,6 +37,11 @@
         <mat-icon>palette</mat-icon> Apariencia
       </button>
     }
+    @if (visibleTabs.includes('services')) {
+      <button class="ap-tab" [class.active]="activeTab==='services'" (click)="setTab('services')">
+        <mat-icon>settings_suggest</mat-icon> Servicios
+      </button>
+    }
     @if (visibleTabs.includes('audit')) {
       <button class="ap-tab" [class.active]="activeTab==='audit'" (click)="setTab('audit')">
         <mat-icon>history_edu</mat-icon> Auditoría
@@ -708,6 +713,45 @@
           @if (logoFile) {
             <p class="text-xs text-slate-500 mt-2 text-center">{{ logoFile.name }}</p>
           }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- TAB: SERVICIOS -->
+  @if (activeTab === 'services') {
+  <div class="ap-content">
+    <div class="ap-section-bar">
+      <h2 class="ap-section-title">Ajustes de Servicios</h2>
+    </div>
+
+    @if (settingsMsg) {
+      <div class="ap-msg-success"><mat-icon>check_circle</mat-icon> {{ settingsMsg }}</div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- OBJETIVOS DE SERVICIO -->
+      <div class="ap-form-card">
+        <h3 class="ap-form-title"><mat-icon>timer</mat-icon> Objetivos del Servicio</h3>
+        <p class="text-xs text-slate-500 mb-4">Configura los tiempos de respuesta y resolución ideales.</p>
+        <div class="space-y-4 mt-4">
+          <div class="ap-field">
+            <label class="ap-label">Tiempo objetivo de resolución (horas)</label>
+            <input class="ap-input" type="number" [(ngModel)]="goalResolutionTime" placeholder="Ej: 2" />
+          </div>
+          <button class="ap-btn-primary w-full" (click)="saveSystemSettings()">
+            <mat-icon>save</mat-icon> Guardar objetivos
+          </button>
+        </div>
+      </div>
+      
+      <!-- OTROS AJUSTES (Placeholder for future) -->
+      <div class="ap-form-card">
+        <h3 class="ap-form-title"><mat-icon>rule</mat-icon> Configuración de Incidencias</h3>
+        <p class="text-xs text-slate-500 mb-4">Parámetros adicionales para el ciclo de vida de los tickets.</p>
+        <div class="flex items-center justify-center p-8 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
+          <span class="text-xs text-slate-400">Próximamente: Reglas de auto-cierre, notificaciones personalizadas, etc.</span>
         </div>
       </div>
     </div>
