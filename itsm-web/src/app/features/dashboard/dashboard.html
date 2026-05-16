@@ -170,6 +170,10 @@
           <app-my-incidents
             [incidentsOpen]="incidentsOpen"
             [incidentsResolved]="incidentsResolved"
+            [loading]="loadingList"
+            [hasUnreadComments]="hasUnreadComments.bind(this)"
+            [hasComments]="hasComments.bind(this)"
+            [getPriorityClass]="getPriorityClass.bind(this)"
             (openTicket)="openDrawer($event)"
           ></app-my-incidents>
         }

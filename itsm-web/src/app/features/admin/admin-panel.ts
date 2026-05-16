@@ -37,7 +37,6 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   uName        = '';
   uEmail       = '';
-  uPassword    = '';
   uRole        = 'ROLE_AGENT';
   uNewPassword = '';
   savingUser   = false;
@@ -78,13 +77,9 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   compName = '';
   companyInviteName = '';
   companyInviteEmail = '';
-
-  // INVITACIONES (integradas en tab usuarios)
-  inviteEmail = '';
   inviting = false;
   lastInviteUrl = '';
   copiedLink = false;
-  showInvitePanel = false;
 
   // AUDITORÍA
   auditLogs: any[] = [];
@@ -195,9 +190,9 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   openCreateUser(): void {
     this.editingUser = null;
-    this.uName = ''; this.uEmail = ''; this.uPassword = ''; this.uRole = 'ROLE_AGENT'; this.uNewPassword = '';
+    this.uName = ''; this.uEmail = ''; this.uNewPassword = '';
+    this.uRole = this.selectedCompany === 'global' ? 'ROLE_AGENT' : 'ROLE_USER';
     this.showUserForm = true;
-    this.showInvitePanel = false;
     this.clearMsg();
   }
 
@@ -244,9 +239,8 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   openEditUser(u: AdminUser): void {
     this.editingUser = u;
-    this.uName = u.name; this.uEmail = u.email; this.uRole = u.role; this.uPassword = ''; this.uNewPassword = '';
+    this.uName = u.name; this.uEmail = u.email; this.uRole = u.role; this.uNewPassword = '';
     this.showUserForm = true;
-    this.showInvitePanel = false;
     this.clearMsg();
   }
 
@@ -260,15 +254,10 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     if (!this.uName.trim() || !this.uEmail.trim()) {
       this.errorMsg = 'Nombre y email son obligatorios'; return;
     }
-    if (!this.editingUser && !this.uPassword.trim()) {
-      this.errorMsg = 'La contraseña es obligatoria al crear un usuario'; return;
-    }
-    this.savingUser = true;
-
     if (!this.editingUser) {
       const payload: CreateUserRequest = {
         name: this.uName.trim(), email: this.uEmail.trim(),
-        password: this.uPassword, role: this.uRole,
+        role: this.uRole,
       };
       this.adminService.createUser(payload).subscribe({
         next: (u) => {
@@ -317,49 +306,6 @@ export class AdminPanelComponent implements OnInit, OnChanges {
       'ROLE_ADMIN': 'Administrador', 'ROLE_AGENT': 'Agente', 'ROLE_USER': 'Empleado',
     };
     return map[role] ?? role;
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // INVITACIONES (integradas en pestaña Usuarios)
-  // ══════════════════════════════════════════════════════════════
-  toggleInvitePanel(): void {
-    this.showInvitePanel = !this.showInvitePanel;
-    if (this.showInvitePanel) {
-      this.showUserForm = false;
-      this.inviteEmail = '';
-      this.lastInviteUrl = '';
-      this.copiedLink = false;
-      this.clearMsg();
-    }
-  }
-
-  sendInvite(): void {
-    if (!this.inviteEmail.trim()) return;
-    this.inviting = true;
-    this.adminService.inviteUser(this.inviteEmail.trim()).subscribe({
-      next: (res: any) => {
-        this.lastInviteUrl = res.url;
-        this.inviting = false;
-        this.copiedLink = false;
-        this.successMsg = '✓ Enlace de invitación generado con éxito';
-        this.cdr.detectChanges();
-      },
-      error: () => { this.inviting = false; this.errorMsg = 'Error al generar invitación'; this.cdr.detectChanges(); }
-    });
-  }
-
-  copyInviteUrl(): void {
-    if (!this.lastInviteUrl) return;
-    const fullUrl = window.location.origin + this.lastInviteUrl;
-    navigator.clipboard.writeText(fullUrl).then(() => {
-      this.copiedLink = true;
-      this.successMsg = '✓ Enlace copiado al portapapeles';
-      this.cdr.detectChanges();
-      setTimeout(() => { this.copiedLink = false; this.cdr.detectChanges(); }, 3000);
-    }).catch(() => {
-      this.errorMsg = 'No se pudo copiar. Copia manualmente.';
-      this.cdr.detectChanges();
-    });
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -554,10 +500,10 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     const companies = user.companies?.map(c => c.id) || [];
 
     if (type === 'cat') {
-      const idx = categories.indexOf(id);
+      const idx = categories.findIndex(cid => String(cid) === String(id));
       if (idx === -1) categories.push(id); else categories.splice(idx, 1);
     } else {
-      const idx = companies.indexOf(id);
+      const idx = companies.findIndex(cid => String(cid) === String(id));
       if (idx === -1) companies.push(id); else companies.splice(idx, 1);
     }
 
@@ -573,8 +519,8 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     });
   }
 
-  hasCategory(user: AdminUser, catId: number): boolean {
-    return !!user.categories?.find(c => c.id === catId);
+  hasCategory(user: AdminUser, catId: any): boolean {
+    return !!user.categories?.find(c => String(c.id) === String(catId));
   }
 
   getAgentCategories(companyId: string): Category[] {
@@ -582,10 +528,10 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     return this.categories.filter(c => (c as any).companyId === companyId);
   }
 
-  toggleAllCategories(user: AdminUser, companyId: string, assign: boolean): void {
-    const companyCats = this.getAgentCategories(companyId).map(c => c.id);
-    let currentCats = user.categories?.map(c => c.id) || [];
-    const companies = user.companies?.map(c => c.id) || [];
+  toggleAllCategories(user: AdminUser, companyId: any, assign: boolean): void {
+    const companyCats = this.getAgentCategories(companyId).map(c => String(c.id));
+    let currentCats = user.categories?.map(c => String(c.id)) || [];
+    const companies = user.companies?.map(c => String(c.id)) || [];
 
     if (assign) {
       // Add all company categories that the user doesn't already have
@@ -616,8 +562,8 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     return companyCats.every(cat => this.hasCategory(user, cat.id));
   }
 
-  hasCompany(user: AdminUser, compId: string): boolean {
-    return !!user.companies?.find(c => c.id === compId);
+  hasCompany(user: AdminUser, compId: any): boolean {
+    return !!user.companies?.find(c => String(c.id) === String(compId));
   }
 
   agentCompanyNames(user: AdminUser): string {
@@ -783,7 +729,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   private closeAllForms(): void {
     this.showUserForm = false; this.showCatForm = false; this.showPriForm = false;
     this.editingUser = null; this.editingCat = null; this.editingPri = null;
-    this.showCompanyForm = false; this.showInvitePanel = false;
+    this.showCompanyForm = false;
     this.editingCompany = null;
     this.expandedAgentId = null;
     this.projectView = 'list';

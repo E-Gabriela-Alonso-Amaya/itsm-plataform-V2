@@ -63,43 +63,13 @@
         </div>
       </div>
       <div class="flex gap-2">
-        <button class="ap-btn-cancel" (click)="toggleInvitePanel()" [class.bg-slate-100]="showInvitePanel">
-          <mat-icon>mail</mat-icon> Invitar usuario
-        </button>
         <button class="ap-btn-primary" (click)="openCreateUser()">
           <mat-icon>person_add</mat-icon> Nuevo usuario
         </button>
       </div>
     </div>
 
-    <!-- PANEL INVITACIÓN -->
-    @if (showInvitePanel) {
-    <div class="ap-form-card invite-panel">
-      <h3 class="ap-form-title"><mat-icon>mail</mat-icon> Invitar nuevo usuario</h3>
-      <p class="text-sm text-slate-500 mb-4">Envía un enlace de registro al correo del técnico o empleado.</p>
-      <div class="flex gap-2 items-end">
-        <div class="ap-field flex-grow">
-          <label class="ap-label">Correo electrónico</label>
-          <input class="ap-input" type="email" [(ngModel)]="inviteEmail" placeholder="correo@ejemplo.com" />
-        </div>
-        <button class="ap-btn-primary whitespace-nowrap" [disabled]="inviting" (click)="sendInvite()">
-          @if (inviting) { <mat-spinner diameter="16"></mat-spinner> }
-          @else { <mat-icon>send</mat-icon> Generar Link }
-        </button>
-      </div>
-      @if (lastInviteUrl) {
-        <div class="mt-4 p-3 bg-slate-50 rounded border border-slate-200">
-          <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Enlace generado:</label>
-          <div class="flex items-center gap-2">
-            <code class="text-xs bg-white p-2 rounded border flex-grow truncate">{{ lastInviteUrl }}</code>
-            <button class="ap-btn-icon" [class.text-emerald-500]="copiedLink" (click)="copyInviteUrl()" title="Copiar enlace">
-              <mat-icon>{{ copiedLink ? 'check_circle' : 'content_copy' }}</mat-icon>
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-    }
+
 
     <!-- FORMULARIO CREAR / EDITAR USUARIO -->
     @if (showUserForm) {
@@ -118,19 +88,19 @@
           <label class="ap-label">Email <span class="req">*</span></label>
           <input class="ap-input" type="email" [(ngModel)]="uEmail" placeholder="usuario@empresa.com" />
         </div>
-        <div class="ap-field">
-          <label class="ap-label">Rol <span class="req">*</span></label>
-          <select class="ap-select" [(ngModel)]="uRole">
-            <option value="ROLE_USER">Empleado</option>
-            <option value="ROLE_AGENT">Agente</option>
-            <option value="ROLE_ADMIN">Administrador</option>
-          </select>
-        </div>
-        @if (!editingUser) {
-        <div class="ap-field">
-          <label class="ap-label">Contraseña inicial <span class="req">*</span></label>
-          <input class="ap-input" type="password" [(ngModel)]="uPassword" placeholder="Mínimo 8 caracteres" />
-        </div>
+        @if (selectedCompany === 'global') {
+          <div class="ap-field">
+            <label class="ap-label">Rol <span class="req">*</span></label>
+            <select class="ap-select" [(ngModel)]="uRole">
+              <option value="ROLE_AGENT">Agente</option>
+              <option value="ROLE_ADMIN">Administrador</option>
+            </select>
+          </div>
+        } @else {
+          <div class="ap-field opacity-50 pointer-events-none">
+            <label class="ap-label">Rol <span class="req">*</span></label>
+            <input class="ap-input bg-slate-50" type="text" [value]="'Empleado'" readonly />
+          </div>
         }
         @if (editingUser) {
         <div class="ap-field">

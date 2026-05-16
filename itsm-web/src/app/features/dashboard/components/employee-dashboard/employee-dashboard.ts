@@ -27,12 +27,19 @@ export class EmployeeDashboardComponent {
     this.rateTicket.emit({ ticket: t, rating: stars });
   }
 
+  /** Tickets activos: en proceso, nuevos, abiertos (no en espera ni resueltos) */
   get colActive(): Incident[] {
-    return this.incidentsOpen.filter(t => !t.hasUnreadMessagesForEmployee);
+    const waitingStatuses = ['Espera info', 'Pendiente'];
+    const doneStatuses = ['Resuelto', 'Cerrado'];
+    return this.incidentsOpen.filter(
+      t => !waitingStatuses.includes(t.status) && !doneStatuses.includes(t.status)
+    );
   }
 
-  get colPendingMessages(): Incident[] {
-    return this.incidentsOpen.filter(t => t.hasUnreadMessagesForEmployee);
+  /** Tickets en espera de respuesta del empleado */
+  get colWaiting(): Incident[] {
+    const waitingStatuses = ['Espera info', 'Pendiente'];
+    return this.incidentsOpen.filter(t => waitingStatuses.includes(t.status));
   }
 
   getSlaProgress(ticket: Incident): number {

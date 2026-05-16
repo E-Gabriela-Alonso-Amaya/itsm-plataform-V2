@@ -284,7 +284,7 @@ class AdminController extends AbstractController
         if (!$data) return $this->json(['error' => 'JSON inválido'], 400);
 
         // Validar campos obligatorios
-        $required = ['name', 'email', 'password', 'role'];
+        $required = ['name', 'email', 'role'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
                 return $this->json(['error' => "El campo '{$field}' es obligatorio"], 422);
@@ -306,8 +306,10 @@ class AdminController extends AbstractController
             return $this->json(['error' => 'Ya existe un usuario con ese email'], 409);
         }
 
+        $password = !empty($data['password']) ? $data['password'] : bin2hex(random_bytes(10));
+        
         // Contraseña mínimo 8 caracteres (OWASP A07)
-        if (strlen($data['password']) < 8) {
+        if (strlen($password) < 8) {
             return $this->json(['error' => 'La contraseña debe tener al menos 8 caracteres'], 422);
         }
 
@@ -325,7 +327,7 @@ class AdminController extends AbstractController
         $user->setIsActive(true);
 
         // OWASP A02: hash seguro con argon2id/bcrypt vía Symfony
-        $user->setPassword($hasher->hashPassword($user, $data['password']));
+        $user->setPassword($hasher->hashPassword($user, $password));
 
         $em->persist($user);
         $em->flush();

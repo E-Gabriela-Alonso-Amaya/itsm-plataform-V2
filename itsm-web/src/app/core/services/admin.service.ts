@@ -19,7 +19,7 @@ export interface AdminUser {
 export interface CreateUserRequest {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   role: string;
 }
 
@@ -98,7 +98,7 @@ export class AdminService {
   }
 
   // ── MATRIZ DE ASIGNACIÓN ──────────────────────────────────────
-  updateMatrix(userId: string, data: { categories?: number[], companies?: string[] }): Observable<AdminUser> {
+  updateMatrix(userId: string, data: { categories?: any[], companies?: any[] }): Observable<AdminUser> {
     return this.http.put<AdminUser>(`${this.base}/users/${userId}/matrix`, data);
   }
 
