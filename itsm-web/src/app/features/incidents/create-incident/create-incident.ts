@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -49,8 +50,7 @@ export class CreateIncidentComponent implements OnInit {
   selectedAgentId: string | null = null;
 
   // ADJUNTOS
-  pendingFile: File | null = null;
-  pendingFileName = '';
+  pendingFiles: { file: File, name: string, preview?: string }[] = [];
   uploadingAttachment = false;
 
   // DATOS DE LOS DESPLEGABLES
@@ -73,7 +73,8 @@ export class CreateIncidentComponent implements OnInit {
     private userService: UserService,
     private authService: AuthService,
     private attachmentService: AttachmentService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -124,15 +125,18 @@ export class CreateIncidentComponent implements OnInit {
 
   this.incidentService.create(body).subscribe({
     next: (incident: Incident) => {
-      if (this.pendingFile) {
+      if (this.pendingFiles.length > 0) {
         this.uploadingAttachment = true;
-        this.attachmentService.upload(incident.id, this.pendingFile, '').subscribe({
+        const uploadTasks = this.pendingFiles.map(pf => this.attachmentService.upload(incident.id, pf.file, ''));
+        
+        forkJoin(uploadTasks).subscribe({
           next: () => this.router.navigate(['/dashboard']),
           error: (err) => {
             console.error('Error al subir adjunto:', err);
-            this.error = 'Incidencia creada, pero: ' + (err.error?.message || err.error?.error || 'hubo un problema al subir el archivo.');
+            this.error = 'Incidencia creada, pero: ' + (err.error?.message || err.error?.error || 'hubo un problema al subir los archivos.');
             this.loading = false;
             this.uploadingAttachment = false;
+            this.cdr.detectChanges();
           }
         });
       } else {
@@ -142,6 +146,7 @@ export class CreateIncidentComponent implements OnInit {
     error: (err) => {
       this.error = err.error?.errors?.join(', ') || 'Error al crear la incidencia';
       this.loading = false;
+      this.cdr.detectChanges();
     }
   });
 }
@@ -156,21 +161,22 @@ export class CreateIncidentComponent implements OnInit {
         this.error = 'El archivo supera el límite de 2 MB.';
         return;
       }
-      this.pendingFile = file;
-      this.pendingFileName = file.name;
+      this.pendingFiles.push({ file, name: file.name });
       this.error = '';
+      this.cdr.detectChanges();
       return;
     }
 
     // SI ES IMAGEN: Redimensionar en el cliente
     const reader = new FileReader();
     reader.onload = (e: any) => {
+      const previewUrl = e.target.result;
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        const max_size = 1280; // Tamaño máximo (ancho o alto)
+        const max_size = 1280;
 
         if (width > height) {
           if (width > max_size) {
@@ -191,25 +197,24 @@ export class CreateIncidentComponent implements OnInit {
 
         canvas.toBlob((blob) => {
           if (blob) {
-            // Creamos un nuevo File a partir del Blob redimensionado
-            this.pendingFile = new File([blob], file.name, {
+            const resizedFile = new File([blob], file.name, {
               type: 'image/jpeg',
               lastModified: Date.now()
             });
-            this.pendingFileName = file.name;
+            this.pendingFiles.push({ file: resizedFile, name: file.name, preview: previewUrl });
             this.error = '';
+            this.cdr.detectChanges(); // <- FIX: Forzar detección de cambios
           }
-        }, 'image/jpeg', 0.8); // 80% de calidad JPEG
+        }, 'image/jpeg', 0.8);
       };
-      img.src = e.target.result;
+      img.src = previewUrl;
     };
     reader.readAsDataURL(file);
   }
 
-removeFile(): void {
-  this.pendingFile = null;
-  this.pendingFileName = '';
-}
+  removeFile(index: number): void {
+    this.pendingFiles.splice(index, 1);
+  }
 
 
 

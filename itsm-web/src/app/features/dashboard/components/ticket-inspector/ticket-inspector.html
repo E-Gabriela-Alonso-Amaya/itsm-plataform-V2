@@ -25,6 +25,22 @@
           </div>
         </div>
       </div>
+
+      <!-- BOTONES DE ESTADO EN CABECERA (Lado Derecho) -->
+      @if (!isMobile && isAdminOrAgent() && !isHardClosed()) {
+        <div class="ins-toolbar-actions">
+          @for (s of nextStatuses(selectedTicket); track s) {
+            <button
+              class="btn-status-header"
+              (click)="changeStatus.emit({ticket: selectedTicket, status: s})"
+              [attr.data-status-target]="s"
+            >
+              {{ s }}
+            </button>
+          }
+        </div>
+      }
+
       @if (!isMobile) {
         <button class="ins-close-btn" (click)="close.emit()">
           <mat-icon>close</mat-icon>
@@ -48,9 +64,6 @@
           (click)="mobileInspectorTab = 'attachments'"
         >
           <mat-icon>attach_file</mat-icon> Adjuntos
-          @if (attachments.length > 0) {
-            <span class="mob-tab-badge">{{ attachments.length }}</span>
-          }
         </button>
         <button
           class="ins-mob-tab"
@@ -64,10 +77,11 @@
 
     <!-- ── CUERPO ── -->
     <div class="ins-body">
-      <!-- COL 1: INFO + GESTIÓN + HISTORIAL -->
+      
+      <!-- COL 1: DETALLES Y HISTORIAL -->
       <div class="ins-col" [class.mob-hidden]="isMobile && mobileInspectorTab !== 'info'">
         <div class="ins-col-header">
-          <mat-icon>info_outline</mat-icon> Detalles y Gestión
+          <mat-icon>info_outline</mat-icon> Detalles y Historial
         </div>
         <div class="ins-col-scroll">
           <div class="ins-data-section">
@@ -92,50 +106,6 @@
               <p class="di-val-p">{{ selectedTicket.description }}</p>
             </div>
           </div>
-
-          @if (isAdmin() && !selectedTicket.isClosed) {
-            <div class="ins-action-card">
-              <label class="di-lbl">Reasignar Agente</label>
-              <div class="assign-group">
-                <select class="modern-select" [(ngModel)]="selectedAgentId">
-                  <option value="">— Seleccionar —</option>
-                  @for (a of agents; track a.id) {
-                    <option [value]="a.id">{{ a.name }}</option>
-                  }
-                </select>
-                <button
-                  class="btn-primary-sm"
-                  [disabled]="!selectedAgentId || assigningAgent"
-                  (click)="assignAgent.emit(selectedAgentId)"
-                >
-                  @if (assigningAgent) {
-                    <mat-spinner diameter="14"></mat-spinner>
-                  } @else {
-                    Asignar
-                  }
-                </button>
-              </div>
-            </div>
-          }
-
-          @if (isAdminOrAgent() && !selectedTicket.isClosed) {
-            <div class="ins-action-card">
-              <label class="di-lbl">Avanzar Estado</label>
-              <div class="status-flex">
-                @for (s of nextStatuses(selectedTicket); track s) {
-                  <button
-                    class="btn-status-chip"
-                    (click)="changeStatus.emit({ticket: selectedTicket, status: s})"
-                  >
-                    {{ s }}
-                  </button>
-                }
-                @if (nextStatuses(selectedTicket).length === 0) {
-                  <span class="no-actions">No hay cambios disponibles</span>
-                }
-              </div>
-            </div>
-          }
 
           @if (auditLogs.length > 0) {
             <div class="ins-action-card ins-audit">
@@ -178,110 +148,131 @@
         </div>
       </div>
 
-      <!-- COL 2: ADJUNTOS -->
-      <div
-        class="ins-col"
-        [class.mob-hidden]="isMobile && mobileInspectorTab !== 'attachments'"
-      >
+      <!-- COL 2: GESTIÓN Y ADJUNTOS -->
+      <div class="ins-col" [class.mob-hidden]="isMobile && mobileInspectorTab !== 'attachments'">
         <div class="ins-col-header">
-          <mat-icon>attach_file</mat-icon> Adjuntos
-          @if (attachments.length > 0) {
-            <span class="ins-col-badge">{{ attachments.length }}</span>
-          }
+          <mat-icon>settings</mat-icon> Gestión
         </div>
         <div class="ins-col-scroll">
-          @if (!selectedTicket.isClosed) {
-            <div class="ins-upload-zone">
-              <div class="ins-upload-btns">
-                <button class="up-btn file" (click)="fileInput.click()">
-                  <mat-icon>add_to_photos</mat-icon> Archivo
-                </button>
-                <button class="up-btn camera" (click)="cameraInput.click()">
-                  <mat-icon>photo_camera</mat-icon> Cámara
-                </button>
-              </div>
-              <input
-                #fileInput
-                type="file"
-                style="display: none"
-                accept="image/*,.pdf,.doc,.docx"
-                (change)="fileSelected.emit($event)"
-              />
-              <input
-                #cameraInput
-                type="file"
-                style="display: none"
-                accept="image/*"
-                capture="environment"
-                (change)="fileSelected.emit($event)"
-              />
-            </div>
-
-            @if (pendingFile) {
-              <div class="ins-pending-card">
-                <div class="pending-top">
-                  <mat-icon>insert_drive_file</mat-icon>
-                  <span class="p-name">{{ pendingFile.name }}</span>
-                </div>
-                <input
-                  class="p-input"
-                  [ngModel]="pendingDescription"
-                  (ngModelChange)="onPendingDescChange($event)"
-                  placeholder="Nota opcional..."
-                />
-                <div class="p-actions">
+          
+          <!-- PRIORIDAD -->
+          @if (isAdminOrAgent() && !isHardClosed() && selectedTicket.status !== 'Resuelto') {
+            <div class="ins-action-card">
+              <label class="di-lbl">Cambiar Prioridad</label>
+              <div class="status-flex">
+                @for (p of priorities; track p.id) {
                   <button
-                    class="p-btn-up"
-                    (click)="uploadFile.emit()"
-                    [disabled]="uploadingAttachment"
+                    class="btn-status-chip"
+                    [class.active]="p.name === selectedTicket.priority"
+                    (click)="changePriority.emit({ticket: selectedTicket, priorityId: p.id})"
                   >
-                    @if (uploadingAttachment) {
-                      <mat-spinner diameter="14"></mat-spinner>
-                    } @else {
-                      Subir
-                    }
-                  </button>
-                  <button class="p-btn-cancel" (click)="cancelPending.emit()">Cancelar</button>
-                </div>
-              </div>
-            }
-          }
-
-          <div class="ins-attachments-grid">
-            @for (att of attachments; track att.id) {
-              <div class="ins-att-item">
-                <div class="att-thumb" (click)="previewAttachment.emit(att)">
-                  @if (att.isImage) {
-                    <!-- This would need a pipe or a way to get the URL -->
-                    <mat-icon>image</mat-icon>
-                  } @else {
-                    <mat-icon>description</mat-icon>
-                  }
-                </div>
-                <div class="att-info">
-                  <span class="name">{{ att.originalName }}</span>
-                  <span class="meta">{{ att.uploadedBy }} · {{ att.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
-                </div>
-                @if (isAdmin() || (user && user.id === att.uploadedById)) {
-                  <button
-                    class="att-del"
-                    (click)="deleteAttachment.emit(att)"
-                    [disabled]="deletingAttachmentId === att.id"
-                  >
-                    <mat-icon>delete</mat-icon>
+                    {{ p.name }}
                   </button>
                 }
               </div>
+            </div>
+          }
+
+          <!-- ASIGNACIÓN -->
+          @if (isAdminOrAgent() && !isHardClosed()) {
+            <div class="ins-action-card">
+              <label class="di-lbl">Asignar Agente</label>
+              
+              <!-- Si hay una asignación pendiente para MÍ -->
+              @if (selectedTicket.pendingAssigneeId === user?.id) {
+                <div class="pending-confirm-box">
+                  <p class="pending-msg">Te han asignado este ticket. ¿Aceptas?</p>
+                  <div class="confirm-btns">
+                    <button class="btn-confirm-yes" (click)="onConfirmAssignment()">Aceptar</button>
+                    <button class="btn-confirm-no" (click)="onRejectAssignment()">Rechazar</button>
+                  </div>
+                </div>
+              } @else if (selectedTicket.pendingAssigneeId) {
+                <div class="pending-wait-box">
+                  <p class="pending-msg">Esperando confirmación de <strong>{{ selectedTicket.pendingAssigneeName }}</strong></p>
+                </div>
+              } @else {
+                <div class="assign-group">
+                  <select class="modern-select" [(ngModel)]="selectedAgentId">
+                    <option value="">— Seleccionar —</option>
+                    @for (a of filteredAgents(); track a.id) {
+                      <option [value]="a.id">{{ a.name }}</option>
+                    }
+                  </select>
+                  <button
+                    class="btn-primary-sm"
+                    [disabled]="!selectedAgentId || assigningAgent"
+                    (click)="assignAgent.emit(selectedAgentId)"
+                  >
+                    @if (assigningAgent) {
+                      <mat-spinner diameter="14"></mat-spinner>
+                    } @else {
+                      Asignar
+                    }
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- ADJUNTOS -->
+          <div class="ins-action-card">
+            <label class="di-lbl">Adjuntos</label>
+            @if (!isHardClosed()) {
+              <div class="ins-upload-zone">
+                <div class="ins-upload-btns">
+                  <button class="up-btn file" (click)="fileInput.click()">
+                    <mat-icon>add_to_photos</mat-icon> Archivo
+                  </button>
+                  <button class="up-btn camera" (click)="cameraInput.click()">
+                    <mat-icon>photo_camera</mat-icon> Cámara
+                  </button>
+                </div>
+                <input #fileInput type="file" style="display: none" accept="image/*,.pdf,.doc,.docx" (change)="fileSelected.emit($event)" />
+                <input #cameraInput type="file" style="display: none" accept="image/*" capture="environment" (change)="fileSelected.emit($event)" />
+              </div>
+
+              @if (pendingFile) {
+                <div class="ins-pending-card">
+                  <div class="pending-top">
+                    <mat-icon>insert_drive_file</mat-icon>
+                    <span class="p-name">{{ pendingFile.name }}</span>
+                  </div>
+                  <input class="p-input" [ngModel]="pendingDescription" (ngModelChange)="onPendingDescChange($event)" placeholder="Nota opcional..." />
+                  <div class="p-actions">
+                    <button class="p-btn-up" (click)="uploadFile.emit()" [disabled]="uploadingAttachment">
+                      @if (uploadingAttachment) { <mat-spinner diameter="14"></mat-spinner> } @else { Subir }
+                    </button>
+                    <button class="p-btn-cancel" (click)="cancelPending.emit()">Cancelar</button>
+                  </div>
+                </div>
+              }
             }
+
+            <div class="ins-attachments-grid">
+              @for (att of attachments; track att.id) {
+                <div class="ins-att-item">
+                  <div class="att-thumb" (click)="previewAttachment.emit(att)">
+                    @if (att.isImage) { <mat-icon>image</mat-icon> } @else { <mat-icon>description</mat-icon> }
+                  </div>
+                  <div class="att-info">
+                    <span class="name">{{ att.originalName }}</span>
+                    <span class="meta">{{ att.uploadedBy }} · {{ att.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+                  </div>
+                  @if (isAdmin() || (user && user.id === att.uploadedById)) {
+                    <button class="att-del" (click)="deleteAttachment.emit(att)" [disabled]="deletingAttachmentId === att.id">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
           </div>
         </div>
       </div>
 
       <!-- COL 3: CHAT -->
-      <div
-        class="ins-col col-chat"
-        [class.mob-hidden]="isMobile && mobileInspectorTab !== 'chat'"
-      >
+      <div class="ins-col col-chat" [class.mob-hidden]="isMobile && mobileInspectorTab !== 'chat'">
         <div class="ins-col-header">
           <mat-icon>chat_bubble_outline</mat-icon> Chat de Resolución
         </div>
@@ -298,7 +289,7 @@
           }
         </div>
 
-        @if (!selectedTicket.isClosed) {
+        @if (!isHardClosed()) {
           <div class="ins-chat-input-area">
             <textarea
               [(ngModel)]="newComment"
@@ -319,6 +310,7 @@
           </div>
         }
       </div>
+
     </div>
   </div>
 }

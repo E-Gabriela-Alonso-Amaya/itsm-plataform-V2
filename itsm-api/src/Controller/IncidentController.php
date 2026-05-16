@@ -58,11 +58,26 @@ class IncidentController extends AbstractController
                 'status' => $activeStatuses
             ]);
 
-            if ($newCount > 0 || $assignedCount > 0) {
+            // Conteo de mensajes no leídos (asignados al usuario o sin asignar, si es admin/agente)
+            $unreadCriteria = [
+                'company' => $company,
+                'hasUnreadMessagesForAgent' => true,
+                'status' => $activeStatuses
+            ];
+            if (!$isAdmin) {
+                // Si no es admin, solo vemos los no leídos que están asignados a nosotros o sin asignar.
+                // Doctrine no permite hacer un OR fácilmente en el array assoc de count(),
+                // por lo que simplemente contaremos los no leídos asignados a nosotros.
+                $unreadCriteria['assignedTo'] = $user;
+            }
+            $unreadCount = $repository->count($unreadCriteria);
+
+            if ($newCount > 0 || $assignedCount > 0 || $unreadCount > 0) {
                 $summary[] = [
                     'companyId' => $company->getId(),
                     'new' => $newCount,
                     'assigned' => $assignedCount,
+                    'unread' => $unreadCount,
                 ];
             }
         }
@@ -153,10 +168,11 @@ string $id,
         EntityManagerInterface $em,
         AuditLogRepository $auditLogRepository
     ): JsonResponse {
-/** @var AppUser $user */
-        $user = $this->getUser();
-if (!in_array('ROLE_ADMIN', $user->getRoles())) {
-return $this->json(['error' => 'Solo administradores pueden asignar tickets a agentes'], 403);
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles());
+        $isAgent = in_array('ROLE_AGENT', $user->getRoles());
+
+        if (!$isAdmin && !$isAgent) {
+            return $this->json(['error' => 'No tienes permiso para asignar tickets'], 403);
         }
         $incident = $repository->find($id);
 if (!$incident) return $this->json(['error' => 'Incidencia no encontrada'], 404);
@@ -167,18 +183,91 @@ if (!$agentId) return $this->json(['error' => 'agentId es obligatorio'], 400);
 if (!$agent || (!in_array('ROLE_AGENT', $agent->getRoles()) && !in_array('ROLE_ADMIN', $agent->getRoles()))) {
 return $this->json(['error' => 'Agente no encontrado o sin permisos'], 404);
         }
-// ── REGISTRAR CAMBIO EN AUDIT LOG ─────────────────────────
+        if ($isAdmin) {
+            // Admin asigna directamente
+            $oldAssigned = $incident->getAssignedTo()?->getName() ?? 'Sin asignar';
+            $log = new \App\Entity\AuditLog();
+            $log->setIncident($incident);
+            $log->setChangedBy($user);
+            $log->setFieldChanged('assignedTo');
+            $log->setOldValue($oldAssigned);
+            $log->setNewValue($agent->getName());
+            $em->persist($log);
+
+            $incident->setAssignedTo($agent);
+            $incident->setPendingAssignee(null);
+            $incident->setPendingAssignedAt(null);
+        } else {
+            // Agente asigna como pendiente
+            $incident->setPendingAssignee($agent);
+            $incident->setPendingAssignedAt(new \DateTimeImmutable());
+
+            $log = new \App\Entity\AuditLog();
+            $log->setIncident($incident);
+            $log->setChangedBy($user);
+            $log->setFieldChanged('assignedTo');
+            $log->setOldValue($incident->getAssignedTo()?->getName() ?? 'Sin asignar');
+            $log->setNewValue($agent->getName() . ' (Pendiente)');
+            $em->persist($log);
+        }
+        $em->flush();
+        return $this->json($this->serializeIncident($incident));
+    }
+
+    #[Route('/{id}/confirm-assignment', name: 'confirm_assignment', methods: ['POST'])]
+    public function confirmAssignment(string $id, IncidentRepository $repository, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var AppUser $user */
+        $user = $this->getUser();
+        $incident = $repository->find($id);
+        if (!$incident) return $this->json(['error' => 'Incidencia no encontrada'], 404);
+
+        if (!$incident->getPendingAssignee() || $incident->getPendingAssignee()->getId() !== $user->getId()) {
+            return $this->json(['error' => 'No tienes una asignación pendiente para este ticket'], 403);
+        }
+
         $oldAssigned = $incident->getAssignedTo()?->getName() ?? 'Sin asignar';
+        $incident->setAssignedTo($user);
+        $incident->setPendingAssignee(null);
+        $incident->setPendingAssignedAt(null);
+
         $log = new \App\Entity\AuditLog();
         $log->setIncident($incident);
         $log->setChangedBy($user);
         $log->setFieldChanged('assignedTo');
         $log->setOldValue($oldAssigned);
-        $log->setNewValue($agent->getName());
+        $log->setNewValue($user->getName() . ' (Confirmado)');
         $em->persist($log);
-        $incident->setAssignedTo($agent);
+
         $em->flush();
-return $this->json($this->serializeIncident($incident));
+        return $this->json($this->serializeIncident($incident));
+    }
+
+    #[Route('/{id}/reject-assignment', name: 'reject_assignment', methods: ['POST'])]
+    public function rejectAssignment(string $id, IncidentRepository $repository, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var AppUser $user */
+        $user = $this->getUser();
+        $incident = $repository->find($id);
+        if (!$incident) return $this->json(['error' => 'Incidencia no encontrada'], 404);
+
+        if (!$incident->getPendingAssignee() || $incident->getPendingAssignee()->getId() !== $user->getId()) {
+            return $this->json(['error' => 'No tienes una asignación pendiente para este ticket'], 403);
+        }
+
+        $incident->setPendingAssignee(null);
+        $incident->setPendingAssignedAt(null);
+
+        $log = new \App\Entity\AuditLog();
+        $log->setIncident($incident);
+        $log->setChangedBy($user);
+        $log->setFieldChanged('assignedTo');
+        $log->setOldValue($user->getName() . ' (Rechazado)');
+        $log->setNewValue($incident->getAssignedTo()?->getName() ?? 'Sin asignar');
+        $em->persist($log);
+
+        $em->flush();
+        return $this->json($this->serializeIncident($incident));
     }
 // ─── 7. CHANGE STATUS (agente avanza el estado del ticket) ───────────────
     #[Route('/{id}/status', name: 'change_status', methods: ['PATCH'])]
@@ -245,6 +334,45 @@ if (!$newStatus) return $this->json(['error' => 'Estado no encontrado'], 404);
         return $this->json($this->serializeIncident($incident));
     }
 
+    #[Route('/{id}/priority', name: 'change_priority', methods: ['PATCH'])]
+    public function changePriority(
+        string $id,
+        Request $request,
+        IncidentRepository $repository,
+        PriorityRepository $priorityRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        /** @var AppUser $user */
+        $user = $this->getUser();
+        if (!in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles())) {
+            return $this->json(['error' => 'Acceso denegado'], 403);
+        }
+        $incident = $repository->find($id);
+        if (!$incident) return $this->json(['error' => 'Incidencia no encontrada'], 404);
+        
+        $data = json_decode($request->getContent(), true);
+        $priorityId = $data['priorityId'] ?? null;
+        if (!$priorityId) return $this->json(['error' => 'priorityId es obligatorio'], 400);
+        
+        $newPriority = $priorityRepository->find($priorityId);
+        if (!$newPriority) return $this->json(['error' => 'Prioridad no encontrada'], 404);
+        
+        // Audit log
+        $oldPriorityName = $incident->getPriority() ? $incident->getPriority()->getName() : 'Sin asignar';
+        $log = new \App\Entity\AuditLog();
+        $log->setIncident($incident);
+        $log->setChangedBy($user);
+        $log->setFieldChanged('priority');
+        $log->setOldValue($oldPriorityName);
+        $log->setNewValue($newPriority->getName());
+        $em->persist($log);
+        
+        $incident->setPriority($newPriority);
+        $em->flush();
+        
+        return $this->json($this->serializeIncident($incident));
+    }
+
     #[Route('/{id}/rate', name: 'rate', methods: ['POST'])]
     public function rate(string $id, Request $request, IncidentRepository $repository, EntityManagerInterface $em): JsonResponse
     {
@@ -287,8 +415,8 @@ return [
 'description'   => $incident->getDescription(),
 'category'      => $incident->getCategory()->getName(),
 'categoryId'    => (string) $incident->getCategory()->getId(),
-'priority'      => $incident->getPriority()->getName(),
-'priorityOrder' => $incident->getPriority()->getSortOrder(),
+'priority'      => $incident->getPriority() ? $incident->getPriority()->getName() : 'Sin asignar',
+'priorityOrder' => $incident->getPriority() ? $incident->getPriority()->getSortOrder() : 999,
 'status'        => $incident->getStatus()->getName(),
 'statusId'      => (string) $incident->getStatus()->getId(),
 'isClosed'      => $incident->getStatus()->isClosed(),
@@ -296,14 +424,19 @@ return [
             'reportedById'  => (string) $incident->getReportedBy()->getId(),
             'assignedTo'    => $incident->getAssignedTo() ? $incident->getAssignedTo()->getName() : null,
             'assignedToId'  => $incident->getAssignedTo() ? (string) $incident->getAssignedTo()->getId() : null,
-            'createdAt'     => $incident->getCreatedAt()?->format('Y-m-d\TH:i:sP'),
-            'updatedAt'     => $incident->getUpdatedAt()?->format('Y-m-d\TH:i:sP'),
-            'startedAt'     => $incident->getStartedAt() ? $incident->getStartedAt()->format('Y-m-d\TH:i:sP') : null,
-            'resolvedAt'    => $incident->getResolvedAt() ? $incident->getResolvedAt()->format('Y-m-d\TH:i:sP') : null,
+            'createdAt'     => $incident->getCreatedAt()?->format('c'),
+            'updatedAt'     => $incident->getUpdatedAt()?->format('c'),
+            'startedAt'     => $incident->getStartedAt() ? $incident->getStartedAt()->format('c') : null,
+            'resolvedAt'    => $incident->getResolvedAt() ? $incident->getResolvedAt()->format('c') : null,
             'slaHours'      => $incident->getPriority() ? $incident->getPriority()->getSlaHours() : 0,
-            'pausedAt'      => $incident->getPausedAt() ? $incident->getPausedAt()->format('Y-m-d\TH:i:sP') : null,
+            'pausedAt'      => $incident->getPausedAt() ? $incident->getPausedAt()->format('c') : null,
             'totalPausedMs' => $incident->getTotalPausedMs(),
-            'rating'        => $incident->getRating()
+            'rating'        => $incident->getRating(),
+            'hasUnreadMessagesForAgent'    => $incident->hasUnreadMessagesForAgent(),
+            'hasUnreadMessagesForEmployee' => $incident->hasUnreadMessagesForEmployee(),
+            'pendingAssigneeId'   => $incident->getPendingAssignee() ? (string) $incident->getPendingAssignee()->getId() : null,
+            'pendingAssigneeName' => $incident->getPendingAssignee() ? $incident->getPendingAssignee()->getName() : null,
+            'pendingAssignedAt'   => $incident->getPendingAssignedAt() ? $incident->getPendingAssignedAt()->format('c') : null,
         ];
     }
 // ─── 1. LIST ─────────────────────────────────────────────────────────────
@@ -368,16 +501,15 @@ public function create(
         $priority = null;
         if (!empty($data['priorityId'])) {
             $priority = $priorityRepository->find($data['priorityId']);
-        } elseif ($isEmployee && $category && $category->getCompany()) {
-            // Asignar la prioridad con menor sortOrder de la empresa de la categoría
-            $priority = $priorityRepository->findOneBy(
-                ['company' => $category->getCompany(), 'isActive' => true],
-                ['sortOrder' => 'ASC']
-            );
         }
 
-        if (!$category || !$priority || !$status) {
-            return $this->json(['error' => 'Categoría, prioridad o estado no encontrado'], 404);
+        if (!$category || !$status) {
+            return $this->json(['error' => 'Categoría o estado no encontrado'], 404);
+        }
+        
+        // Si no es empleado y no se encontró la prioridad, error
+        if (!$isEmployee && !$priority) {
+             return $this->json(['error' => 'Prioridad no encontrada'], 404);
         }
         $incident = new Incident();
         $incident->setTitle($data['title']);
@@ -445,13 +577,13 @@ if (!$incident) return $this->json(['error' => 'No encontrada'], 404);
             ['incident' => $incident],
             ['createdAt' => 'ASC']
         );
-return $this->json(array_map(fn($log) => [
-'id'           => $log->getId(),
-'fieldChanged' => $log->getFieldChanged(),
-'oldValue'     => $log->getOldValue(),
-'newValue'     => $log->getNewValue(),
-'changedBy'    => $log->getChangedBy()?->getName() ?? 'Sistema',
-'createdAt'    => $log->getCreatedAt()?->format('d/m/Y H:i'),
-        ], $logs));
+    return $this->json(array_map(fn($log) => [
+        'id'           => (string) $log->getId(),
+        'fieldChanged' => $log->getFieldChanged(),
+        'oldValue'     => $log->getOldValue(),
+        'newValue'     => $log->getNewValue(),
+        'changedBy'    => $log->getChangedBy()?->getName() ?? 'Sistema',
+        'createdAt'    => $log->getCreatedAt()?->format('c'),
+    ], $logs));
     }
 }

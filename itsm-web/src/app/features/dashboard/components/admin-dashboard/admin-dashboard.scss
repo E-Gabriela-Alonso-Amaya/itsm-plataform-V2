@@ -10,3 +10,22 @@
 .military_tech {
   font-size: 18px;
 }
+
+.tc-assign-btns {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
+.tc-assign-dropdown {
+  flex: 1;
+  width: 100%;
+}
+
+.w-full {
+  width: 100% !important;
+}
+
+.justify-center {
+  justify-content: center !important;
+}

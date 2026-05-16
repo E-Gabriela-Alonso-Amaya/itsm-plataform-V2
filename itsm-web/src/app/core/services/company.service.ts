@@ -12,6 +12,7 @@ export interface CompanySummary {
   companyId: string;
   new: number;
   assigned: number;
+  unread?: number;
 }
 
 @Injectable({

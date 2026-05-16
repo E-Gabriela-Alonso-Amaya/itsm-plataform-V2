@@ -105,7 +105,7 @@
 // ── BODY 3 COLUMNAS ──────────────────────────────────────────
 .ins-body {
   display: grid;
-  grid-template-columns: 280px 1fr 320px;
+  grid-template-columns: 1fr 1fr 1fr;
   flex: 1;
   overflow: hidden;
   border-top: 1px solid #e2e8f0;
@@ -297,6 +297,13 @@
     background: #475569;
     color: #fff;
     box-shadow: 0 2px 6px rgba(71, 85, 105, 0.3);
+  }
+
+  &.active {
+    background: #1e293b;
+    color: #fff;
+    border-color: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
   // Color per target status
@@ -954,3 +961,113 @@
   }
 }
 
+
+// -- BOTONES EN CABECERA --------------------------------------
+.ins-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  margin-right: 12px;
+}
+
+.btn-status-header {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #3b82f6;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  &[data-status-target='Procesando'] {
+    background: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+    &:hover { background: #2563eb; color: #fff; }
+  }
+
+  &[data-status-target='Resuelto'] {
+    background: rgba(5, 150, 105, 0.2);
+    color: #6ee7b7;
+    &:hover { background: #059669; color: #fff; }
+  }
+}
+
+// -- CONFIRMACI�N PENDIENTE -----------------------------------
+.pending-confirm-box {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: pulse-soft 2s infinite ease-in-out;
+}
+
+.pending-wait-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.pending-msg {
+  font-size: 12px;
+  color: #92400e;
+  margin: 0;
+  font-weight: 500;
+
+  .pending-wait-box & {
+    color: #64748b;
+  }
+}
+
+.confirm-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-confirm-yes {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  background: #059669;
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background: #047857; }
+}
+
+.btn-confirm-no {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background: #b91c1c; }
+}
+
+@keyframes pulse-soft {
+  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.2); }
+  70% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}

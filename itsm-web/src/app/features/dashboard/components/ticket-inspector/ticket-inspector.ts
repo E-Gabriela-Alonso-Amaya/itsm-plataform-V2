@@ -1,9 +1,9 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Incident, Comment, User, Agent } from '../../../../shared/models/user.model';
+import { Incident, Comment, User, Agent, Priority } from '../../../../shared/models/user.model';
 import { Attachment } from '../../../../shared/models/attachment.model';
 import { SecureImagePipe } from '../../../../core/pipes/secure-image-pipe';
 
@@ -14,13 +14,14 @@ import { SecureImagePipe } from '../../../../core/pipes/secure-image-pipe';
   templateUrl: './ticket-inspector.html',
   styleUrl: './ticket-inspector.scss'
 })
-export class TicketInspectorComponent implements OnInit {
+export class TicketInspectorComponent implements OnInit, OnChanges {
   @Input() selectedTicket: Incident | null = null;
   @Input() user: User | null = null;
   @Input() agents: Agent[] = [];
   @Input() attachments: Attachment[] = [];
   @Input() comments: Comment[] = [];
   @Input() auditLogs: any[] = [];
+  @Input() priorities: Priority[] = [];
   
   @Input() loadingComments: boolean = false;
   @Input() loadingAttachments: boolean = false;
@@ -38,6 +39,7 @@ export class TicketInspectorComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() changeStatus = new EventEmitter<{ticket: Incident, status: string}>();
   @Output() assignAgent = new EventEmitter<string>();
+  @Output() changePriority = new EventEmitter<{ticket: Incident, priorityId: number}>();
   @Output() sendComment = new EventEmitter<string>();
   @Output() fileSelected = new EventEmitter<any>();
   @Output() uploadFile = new EventEmitter<void>();
@@ -52,10 +54,25 @@ export class TicketInspectorComponent implements OnInit {
   selectedAgentId: string = '';
   newComment: string = '';
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   ngOnInit(): void {
+    this.syncAgentId();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedTicket']) {
+      this.syncAgentId();
+    }
+  }
+
+  private syncAgentId(): void {
     if (this.selectedTicket?.assignedToId) {
       this.selectedAgentId = this.selectedTicket.assignedToId;
+    } else {
+      this.selectedAgentId = '';
     }
+    this.cdr.detectChanges();
   }
 
   onSendComment() {
@@ -75,6 +92,11 @@ export class TicketInspectorComponent implements OnInit {
 
   isAdminOrAgent(): boolean {
     return !!(this.user?.roles.includes('ROLE_ADMIN') || this.user?.roles.includes('ROLE_AGENT'));
+  }
+
+  /** Bloqueo total: solo cuando el ticket está en estado 'Cerrado' definitivo */
+  isHardClosed(): boolean {
+    return this.selectedTicket?.status === 'Cerrado';
   }
 
   getPriorityClass(priority: string): string {
@@ -116,10 +138,36 @@ export class TicketInspectorComponent implements OnInit {
       Nuevo: ['Procesando'],
       Abierta: ['Procesando'],
       Procesando: ['Resuelto'],
-      'Espera info': ['Procesando', 'Resuelto'],
-      Pendiente: ['Resuelto'],
-      Espera: ['Resuelto'],
+      'Espera info': ['Procesando'],
+      Pendiente: ['Procesando'],
+      Espera: ['Procesando'],
     };
     return flow[ticket.status] ?? [];
+  }
+
+  @Output() confirmAssignment = new EventEmitter<Incident>();
+  @Output() rejectAssignment = new EventEmitter<Incident>();
+
+  onConfirmAssignment() {
+    if (this.selectedTicket) {
+      this.confirmAssignment.emit(this.selectedTicket);
+    }
+  }
+
+  onRejectAssignment() {
+    if (this.selectedTicket) {
+      this.rejectAssignment.emit(this.selectedTicket);
+    }
+  }
+
+  filteredAgents(): Agent[] {
+    if (this.isAdmin()) return this.agents;
+    if (!this.selectedTicket) return [];
+    
+    // Filtrar agentes por compañía del ticket
+    // Buscamos si el agente tiene alguna compañía que coincida con la del ticket
+    return this.agents.filter(a => 
+      a.companies?.some(c => c.name === this.selectedTicket?.company)
+    );
   }
 }

@@ -20,7 +20,8 @@ class CommentController extends AbstractController
     public function list(
         string $incidentId,
         IncidentRepository $incidentRepo,
-        CommentRepository $commentRepo
+        CommentRepository $commentRepo,
+        EntityManagerInterface $em
     ): JsonResponse {
         $incident = $incidentRepo->find($incidentId);
         if (!$incident) {
@@ -42,12 +43,28 @@ class CommentController extends AbstractController
             ['createdAt' => 'ASC']
         );
 
+        $isAgentOrAdmin = in_array('ROLE_ADMIN', $user->getRoles()) || in_array('ROLE_AGENT', $user->getRoles());
+        
+        $changed = false;
+        if ($isAgentOrAdmin && $incident->hasUnreadMessagesForAgent()) {
+            $incident->setHasUnreadMessagesForAgent(false);
+            $changed = true;
+        } elseif (!$isAgentOrAdmin && $incident->hasUnreadMessagesForEmployee()) {
+            $incident->setHasUnreadMessagesForEmployee(false);
+            $changed = true;
+        }
+
+        if ($changed) {
+            $em->persist($incident);
+            $em->flush();
+        }
+
         $data = array_map(fn($c) => [
-            'id'         => $c->getId(),
+            'id'         => (string) $c->getId(),
             'content'    => $c->getContent(),
-            'authorId'   => $c->getAuthor()->getId(),
+            'authorId'   => (string) $c->getAuthor()->getId(),
             'authorName' => $c->getAuthor()->getName(),
-            'createdAt'  => $c->getCreatedAt()?->format('d/m/Y H:i'),
+            'createdAt'  => $c->getCreatedAt()?->format('c'),
         ], $comments);
 
         return $this->json($data);
@@ -58,6 +75,7 @@ class CommentController extends AbstractController
         string $incidentId,
         Request $request,
         IncidentRepository $incidentRepo,
+        \App\Repository\StatusRepository $statusRepository,
         EntityManagerInterface $em
     ): JsonResponse {
         $incident = $incidentRepo->find($incidentId);
@@ -69,7 +87,8 @@ class CommentController extends AbstractController
         $user = $this->getUser();
 
         // ROLE_USER solo puede comentar sus propias incidencias
-        if (!in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles())) {
+        $isAgentOrAdmin = in_array('ROLE_ADMIN', $user->getRoles()) || in_array('ROLE_AGENT', $user->getRoles());
+        if (!$isAgentOrAdmin) {
             if ($incident->getReportedBy()->getId() !== $user->getId()) {
                 return $this->json(['error' => 'Sin permiso'], 403);
             }
@@ -86,14 +105,42 @@ class CommentController extends AbstractController
         $comment->setIncident($incident);
 
         $em->persist($comment);
+
+        // Si el técnico comenta, el ticket pasa a estado 'Espera info' y pausa el temporizador SLA
+        if ($isAgentOrAdmin) {
+            $incident->setHasUnreadMessagesForEmployee(true);
+            
+            $oldStatus = $incident->getStatus();
+            $oldStatusName = $oldStatus->getName();
+            $waitingStatusNames = ['Espera información', 'Espera info', 'Espera', 'Pendiente'];
+            
+            if (!in_array($oldStatusName, $waitingStatusNames) && !$oldStatus->isClosed()) {
+                $newStatus = $statusRepository->findOneBy(['name' => 'Espera info']);
+                if ($newStatus) {
+                    $log = new \App\Entity\AuditLog();
+                    $log->setIncident($incident);
+                    $log->setChangedBy($user);
+                    $log->setFieldChanged('status');
+                    $log->setOldValue($oldStatusName);
+                    $log->setNewValue($newStatus->getName());
+                    $em->persist($log);
+                    
+                    $incident->setStatus($newStatus);
+                    $incident->setPausedAt(new \DateTimeImmutable());
+                }
+            }
+        } else {
+            $incident->setHasUnreadMessagesForAgent(true);
+        }
+
         $em->flush();
 
         return $this->json([
-            'id'         => $comment->getId(),
+            'id'         => (string) $comment->getId(),
             'content'    => $comment->getContent(),
-            'authorId'   => $comment->getAuthor()->getId(),
+            'authorId'   => (string) $comment->getAuthor()->getId(),
             'authorName' => $comment->getAuthor()->getName(),
-            'createdAt'  => $comment->getCreatedAt()?->format('d/m/Y H:i'),
+            'createdAt'  => $comment->getCreatedAt()?->format('c'),
         ], 201);
     }
 }

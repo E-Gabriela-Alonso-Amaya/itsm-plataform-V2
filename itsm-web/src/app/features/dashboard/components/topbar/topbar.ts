@@ -17,6 +17,7 @@ export class TopbarComponent {
   @Input() activeView: string = 'dashboard';
   @Input() isAdmin: boolean = false;
   @Input() isAgent: boolean = false;
+  @Input() isEmployee: boolean = false;
   @Output() toggleSidebar = new EventEmitter<void>(); // Used for mobile company drawer
   @Output() logout = new EventEmitter<void>();
   @Output() setView = new EventEmitter<string>();
@@ -40,6 +41,11 @@ export class TopbarComponent {
   onSetView(view: string) {
     this.setView.emit(view);
     this.mobileMenuOpen = false;
+  }
+
+  onLogoClick() {
+    const defaultView = this.isAgent ? 'agent_work' : 'dashboard';
+    this.onSetView(defaultView);
   }
 
   @HostListener('document:click')

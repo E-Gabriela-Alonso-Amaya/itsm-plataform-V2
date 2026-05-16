@@ -52,7 +52,19 @@ export class IncidentService {
     return this.api.patch<Incident>(`/incidents/${id}/status`, { status });
   }
 
+  changePriority(id: string, priorityId: number): Observable<Incident> {
+    return this.api.patch<Incident>(`/incidents/${id}/priority`, { priorityId });
+  }
+
   rate(id: string, rating: number): Observable<any> {
     return this.api.post(`/incidents/${id}/rate`, { rating });
+  }
+
+  confirmAssignment(id: string): Observable<Incident> {
+    return this.api.post<Incident>(`/incidents/${id}/confirm-assignment`, {});
+  }
+
+  rejectAssignment(id: string): Observable<Incident> {
+    return this.api.post<Incident>(`/incidents/${id}/reject-assignment`, {});
   }
 }

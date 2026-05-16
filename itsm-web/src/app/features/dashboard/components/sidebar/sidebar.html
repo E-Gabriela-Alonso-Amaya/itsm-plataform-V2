@@ -25,6 +25,9 @@
         @if (getAssignedCount(company.id) > 0) {
           <span class="notif-dot dot-assigned" [title]="getAssignedCount(company.id) + ' asignados'"></span>
         }
+        @if (getUnreadCount(company.id) > 0) {
+          <span class="notif-dot dot-unread" [title]="getUnreadCount(company.id) + ' sin leer'"></span>
+        }
       </div>
     </div>
     }

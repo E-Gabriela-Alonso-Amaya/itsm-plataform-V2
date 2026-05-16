@@ -74,7 +74,7 @@
       <div class="ap-field mb-6">
         <label class="ap-label text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Archivos Adjuntos (Opcional)</label>
         
-        @if (!pendingFile) {
+        @if (pendingFiles.length === 0) {
           <div class="flex items-center justify-center w-full">
             <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all group">
               <div class="flex flex-col items-center justify-center pt-5 pb-6">
@@ -83,23 +83,37 @@
                 <p class="text-xs text-slate-400">Las fotos se optimizan automáticamente.</p>
                 <p class="text-xs text-slate-400">Documentos PDF o Word (Máx. 2MB)</p>
               </div>
-              <input type="file" class="hidden" (change)="onFileSelected($event)" />
+              <input type="file" class="hidden" (change)="onFileSelected($event)" accept="image/*,.pdf,.doc,.docx" />
             </label>
           </div>
         } @else {
-          <div class="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-xl">
-            <div class="flex items-center gap-3">
-              <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                <mat-icon>insert_drive_file</mat-icon>
+          <div class="flex flex-col gap-3">
+            @for (pf of pendingFiles; track $index) {
+              <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="flex items-center gap-3">
+                  @if (pf.preview) {
+                    <img [src]="pf.preview" class="w-12 h-12 object-cover rounded-lg border border-slate-200" />
+                  } @else {
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-lg w-12 h-12 flex items-center justify-center">
+                      <mat-icon>insert_drive_file</mat-icon>
+                    </div>
+                  }
+                  <div>
+                    <p class="text-sm font-bold text-slate-700 truncate max-w-[200px] md:max-w-[300px]">{{ pf.name }}</p>
+                    <p class="text-xs text-emerald-600 font-medium">Listo para subir</p>
+                  </div>
+                </div>
+                <button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" (click)="removeFile($index)" [disabled]="loading">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
-              <div>
-                <p class="text-sm font-bold text-blue-900">{{ pendingFileName }}</p>
-                <p class="text-xs text-blue-600">Listo para subir</p>
-              </div>
-            </div>
-            <button class="p-2 text-blue-400 hover:text-red-500 transition-colors" (click)="removeFile()" [disabled]="loading">
-              <mat-icon>delete</mat-icon>
-            </button>
+            }
+
+            <label class="flex items-center justify-center gap-2 w-full py-3 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer bg-white hover:bg-slate-50 hover:border-blue-400 transition-all text-sm font-medium text-slate-500 hover:text-blue-600 group">
+              <mat-icon class="text-[18px]">add_circle_outline</mat-icon>
+              Añadir otro archivo
+              <input type="file" class="hidden" (change)="onFileSelected($event)" accept="image/*,.pdf,.doc,.docx" />
+            </label>
           </div>
         }
       </div>

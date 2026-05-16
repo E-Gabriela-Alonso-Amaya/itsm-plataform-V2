@@ -31,6 +31,7 @@ export class AdminDashboardComponent {
   @Input() currentUserId: string = '';
   @Input() currentUserRole: string = '';
   @Input() goalResolutionTime: number = 2;
+  @Input() priorityDropdownId: string | null = null;
 
   // Kanban Columns
   @Input() colNew: Incident[] = [];
@@ -46,6 +47,74 @@ export class AdminDashboardComponent {
   @Input() colAdminWaiting: Incident[] = [];
   @Input() colAdminDone: Incident[] = [];
 
+  activeGlobalChart: 'workload' | 'response' | 'satisfaction' = 'workload';
+
+  get workloadChartData() {
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString('es-ES', { weekday: 'short' });
+      const count = this.allCompanyIncidents.filter(inc => {
+        const cDate = new Date(inc.createdAt);
+        return cDate.getDate() === d.getDate() && cDate.getMonth() === d.getMonth() && cDate.getFullYear() === d.getFullYear();
+      }).length;
+      data.push({ label, value: count, fullDate: d });
+    }
+    const highest = Math.max(...data.map(d => d.value), 10);
+    return data.map(d => ({ ...d, height: (d.value / highest) * 100 }));
+  }
+
+  get responseChartData() {
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString('es-ES', { weekday: 'short' });
+      
+      const resolvedThatDay = this.allCompanyIncidents.filter(inc => {
+        if (!inc.resolvedAt && !inc.updatedAt) return false;
+        if (!inc.isClosed && inc.status !== 'Resuelto' && inc.status !== 'Cerrado') return false;
+        const rDate = new Date(inc.resolvedAt || inc.updatedAt!);
+        return rDate.getDate() === d.getDate() && rDate.getMonth() === d.getMonth() && rDate.getFullYear() === d.getFullYear();
+      });
+
+      let avg = 0;
+      if (resolvedThatDay.length > 0) {
+        let totalHours = 0;
+        resolvedThatDay.forEach(inc => {
+           const start = new Date(inc.createdAt).getTime();
+           const end = new Date(inc.resolvedAt || inc.updatedAt!).getTime();
+           totalHours += (end - start) / (1000 * 60 * 60);
+        });
+        avg = totalHours / resolvedThatDay.length;
+      }
+      data.push({ label, value: parseFloat(avg.toFixed(1)), fullDate: d });
+    }
+    const highest = Math.max(...data.map(d => d.value), this.goalResolutionTime * 2 || 10);
+    return data.map(d => ({ ...d, height: (d.value / highest) * 100 }));
+  }
+
+  get satisfactionChartData() {
+    const data = [
+      { label: '5 Estrellas', stars: 5, value: 0 },
+      { label: '4 Estrellas', stars: 4, value: 0 },
+      { label: '3 Estrellas', stars: 3, value: 0 },
+      { label: '2 Estrellas', stars: 2, value: 0 },
+      { label: '1 Estrella', stars: 1, value: 0 }
+    ];
+
+    const rated = this.allCompanyIncidents.filter(i => typeof i.rating === 'number' && i.rating > 0);
+    rated.forEach(inc => {
+      const starLevel = Math.round(inc.rating!);
+      const bucket = data.find(d => d.stars === starLevel);
+      if (bucket) bucket.value++;
+    });
+
+    const highest = Math.max(...data.map(d => d.value), 5);
+    return data.map(d => ({ ...d, width: (d.value / highest) * 100 }));
+  }
+
   @Output() setDashboardTab = new EventEmitter<'queue' | 'my-tickets'>();
   @Output() loadQueue = new EventEmitter<void>();
   @Output() clearFilters = new EventEmitter<void>();
@@ -55,6 +124,8 @@ export class AdminDashboardComponent {
   @Output() toggleAssignDropdown = new EventEmitter<string>();
   @Output() quickAssignToAgent = new EventEmitter<{ticket: Incident, agentId: string}>();
   @Output() updateStatus = new EventEmitter<{ticket: Incident, status: string}>();
+  @Output() updatePriority = new EventEmitter<{ticket: Incident, priorityId: number}>();
+  @Output() togglePriorityDropdown = new EventEmitter<string>();
   @Output() goToCreate = new EventEmitter<void>();
 
   getPriorityClass(priority: string): string {

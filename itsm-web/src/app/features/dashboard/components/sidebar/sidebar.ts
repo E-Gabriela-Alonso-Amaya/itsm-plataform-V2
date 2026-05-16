@@ -64,6 +64,12 @@ export class SidebarComponent implements OnInit {
     return this.summaryMap[companyId]?.assigned || 0;
   }
 
+  getUnreadCount(companyId: string): number {
+    // Podemos usar un valor por defecto o sumar si tuviéramos ese dato
+    // Por ahora para que compile, devolvemos 0 o lo mapeamos si existe
+    return (this.summaryMap[companyId] as any)?.unread || 0;
+  }
+
   loadCompanies() {
     if (this.isAdmin) {
       // Admin ve todas

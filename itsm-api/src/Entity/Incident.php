@@ -47,8 +47,7 @@ class Incident
     private ?Category $category = null;
 
     #[ORM\ManyToOne(targetEntity: Priority::class)] //muchos incidentes pueden tener la misma prioridad
-    #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'Prioridad es obligatoria')]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Priority $priority = null;
 
     #[ORM\ManyToOne(targetEntity: Status::class)] //muchos incidentes pueden tener el mismo estado
@@ -63,6 +62,13 @@ class Incident
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: true)] //es nullable — al crear el incident puede no estar asignado a nadie aún.
     private ?User $assignedTo = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $pendingAssignee = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $pendingAssignedAt = null;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $assignedAt = null;
@@ -98,6 +104,12 @@ class Incident
 
     #[ORM\Column(options: ["default" => 0])]
     private int $totalPausedMs = 0;
+
+    #[ORM\Column(options: ["default" => false])]
+    private bool $hasUnreadMessagesForAgent = false;
+
+    #[ORM\Column(options: ["default" => false])]
+    private bool $hasUnreadMessagesForEmployee = false;
 
     public function getRating(): ?int
     {
@@ -320,6 +332,50 @@ class Incident
     public function setTotalPausedMs(int $totalPausedMs): static
     {
         $this->totalPausedMs = $totalPausedMs;
+        return $this;
+    }
+
+    public function hasUnreadMessagesForAgent(): bool
+    {
+        return $this->hasUnreadMessagesForAgent;
+    }
+
+    public function setHasUnreadMessagesForAgent(bool $hasUnreadMessagesForAgent): static
+    {
+        $this->hasUnreadMessagesForAgent = $hasUnreadMessagesForAgent;
+        return $this;
+    }
+
+    public function hasUnreadMessagesForEmployee(): bool
+    {
+        return $this->hasUnreadMessagesForEmployee;
+    }
+
+    public function setHasUnreadMessagesForEmployee(bool $hasUnreadMessagesForEmployee): static
+    {
+        $this->hasUnreadMessagesForEmployee = $hasUnreadMessagesForEmployee;
+        return $this;
+    }
+
+    public function getPendingAssignee(): ?User
+    {
+        return $this->pendingAssignee;
+    }
+
+    public function setPendingAssignee(?User $pendingAssignee): static
+    {
+        $this->pendingAssignee = $pendingAssignee;
+        return $this;
+    }
+
+    public function getPendingAssignedAt(): ?\DateTimeImmutable
+    {
+        return $this->pendingAssignedAt;
+    }
+
+    public function setPendingAssignedAt(?\DateTimeImmutable $pendingAssignedAt): static
+    {
+        $this->pendingAssignedAt = $pendingAssignedAt;
         return $this;
     }
 

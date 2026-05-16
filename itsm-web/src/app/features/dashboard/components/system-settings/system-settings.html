@@ -1,0 +1,96 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <div class="header-info">
+      <mat-icon class="header-icon">palette</mat-icon>
+      <div>
+        <h1>Ajustes del Sistema</h1>
+        <p>Personaliza la apariencia y parámetros globales</p>
+      </div>
+    </div>
+  </div>
+
+  @if (settingsMsg) {
+    <div class="settings-alert success">
+      <mat-icon>check_circle</mat-icon>
+      <span>{{ settingsMsg }}</span>
+    </div>
+  }
+
+  <div class="settings-grid">
+    <!-- SECCIÓN COLORES -->
+    <div class="settings-card">
+      <div class="card-header">
+        <mat-icon>brush</mat-icon>
+        <h3>Colores y Marca</h3>
+      </div>
+      <div class="card-body">
+        <div class="color-item">
+          <div class="color-info">
+            <span class="color-label">Color Primario</span>
+            <span class="color-hex">{{ primaryColor }}</span>
+          </div>
+          <div class="color-picker-wrap">
+            <div class="color-preview" [style.background]="primaryColor"></div>
+            <input type="color" [(ngModel)]="primaryColor" />
+          </div>
+        </div>
+
+        <div class="color-item">
+          <div class="color-info">
+            <span class="color-label">Color Secundario</span>
+            <span class="color-hex">{{ accentColor }}</span>
+          </div>
+          <div class="color-picker-wrap">
+            <div class="color-preview" [style.background]="accentColor"></div>
+            <input type="color" [(ngModel)]="accentColor" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        @if (isAdmin) {
+          <div class="settings-field">
+            <label>Tiempo objetivo de resolución (Horas)</label>
+            <div class="input-wrap">
+              <mat-icon>timer</mat-icon>
+              <input type="number" [(ngModel)]="goalResolutionTime" min="1" />
+            </div>
+          </div>
+        }
+
+        <div class="settings-actions">
+          <button class="btn-save" (click)="saveSettings()">
+            <mat-icon>save</mat-icon>
+            Guardar Cambios
+          </button>
+          <button class="btn-restore" (click)="resetColors()">
+            <mat-icon>history</mat-icon>
+            Restaurar por defecto
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN PREVISUALIZACIÓN -->
+    <div class="settings-card preview-card">
+      <div class="card-header">
+        <mat-icon>visibility</mat-icon>
+        <h3>Previsualización</h3>
+      </div>
+      <div class="card-body">
+        <div class="preview-shell">
+          <div class="preview-top" [style.background]="primaryColor"></div>
+          <div class="preview-content">
+            <div class="preview-sidebar" [style.background]="accentColor"></div>
+            <div class="preview-main">
+              <div class="preview-rect title" [style.background]="primaryColor"></div>
+              <div class="preview-rect body"></div>
+              <div class="preview-rect body w-3/4"></div>
+              <div class="preview-btn" [style.background]="primaryColor">Botón</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

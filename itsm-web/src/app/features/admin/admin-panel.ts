@@ -101,7 +101,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   // AJUSTES DEL SISTEMA
   primaryColor = '#0ea5e9';
-  secondaryColor = '#64748b';
+  accentColor = '#64748b';
   logoFile: File | null = null;
   logoPreview: string | null = null;
   settingsMsg = '';
@@ -656,9 +656,9 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   saveSystemSettings(): void {
     document.documentElement.style.setProperty('--color-primary', this.primaryColor);
-    document.documentElement.style.setProperty('--color-secondary', this.secondaryColor);
+    document.documentElement.style.setProperty('--color-accent', this.accentColor);
     localStorage.setItem('itsm_primary_color', this.primaryColor);
-    localStorage.setItem('itsm_secondary_color', this.secondaryColor);
+    localStorage.setItem('itsm_accent_color', this.accentColor);
     localStorage.setItem('itsm_goal_resolution_time', this.goalResolutionTime.toString());
     this.settingsMsg = '✓ Ajustes de apariencia y objetivos guardados';
     setTimeout(() => { this.settingsMsg = ''; this.cdr.detectChanges(); }, 3000);
@@ -667,10 +667,10 @@ export class AdminPanelComponent implements OnInit, OnChanges {
 
   loadSystemColors(): void {
     const p = localStorage.getItem('itsm_primary_color');
-    const s = localStorage.getItem('itsm_secondary_color');
+    const s = localStorage.getItem('itsm_accent_color');
     const g = localStorage.getItem('itsm_goal_resolution_time');
     if (p) { this.primaryColor = p; document.documentElement.style.setProperty('--color-primary', p); }
-    if (s) { this.secondaryColor = s; document.documentElement.style.setProperty('--color-secondary', s); }
+    if (s) { this.accentColor = s; document.documentElement.style.setProperty('--color-accent', s); }
     if (g) { this.goalResolutionTime = parseFloat(g); }
   }
 

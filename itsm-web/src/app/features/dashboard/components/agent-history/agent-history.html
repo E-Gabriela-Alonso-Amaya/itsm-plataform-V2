@@ -105,9 +105,9 @@
             <td class="px-6 py-4">
               <div class="flex items-center gap-2">
                 <div class="w-6 h-6 rounded-full bg-sky-100 flex items-center justify-center text-[10px] font-bold text-sky-600">
-                  {{ t.reportedBy?.charAt(0) }}
+                  {{ t.reportedBy.charAt(0) || '?' }}
                 </div>
-                <span class="text-xs text-slate-600 font-medium">{{ t.reportedBy }}</span>
+                <span class="text-xs text-slate-600 font-medium">{{ t.reportedBy || '—' }}</span>
               </div>
             </td>
             <td class="px-6 py-4">

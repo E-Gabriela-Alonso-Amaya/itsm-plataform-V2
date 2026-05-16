@@ -26,6 +26,7 @@ export class AgentWorkComponent {
   @Input() categories: Category[] = [];
   @Input() filterPriority: string = '';
   @Input() filterCategory: string = '';
+  @Input() priorityDropdownId: string | null = null;
 
   @Output() openDrawer = new EventEmitter<Incident>();
   @Output() assign = new EventEmitter<Incident>();
@@ -33,6 +34,8 @@ export class AgentWorkComponent {
   @Output() goToCreate = new EventEmitter<void>();
   @Output() loadQueue = new EventEmitter<void>();
   @Output() clearFilters = new EventEmitter<void>();
+  @Output() togglePriorityDropdown = new EventEmitter<string>();
+  @Output() updatePriority = new EventEmitter<{ticket: Incident, priorityId: number}>();
 
   onFilterChange() {
     this.loadQueue.emit();

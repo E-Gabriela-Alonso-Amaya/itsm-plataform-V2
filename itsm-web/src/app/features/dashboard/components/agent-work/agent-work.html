@@ -87,7 +87,22 @@
         @for (t of colAvailable; track t.id) {
           <div class="ticket-card" (click)="openDrawer.emit(t)">
             <div class="tc-top">
-              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <div class="tc-assign-dropdown">
+                <span class="p-badge cursor-pointer hover:brightness-95 transition-all" 
+                  [ngClass]="getPriorityClass(t.priority)"
+                  (click)="$event.stopPropagation(); togglePriorityDropdown.emit(t.id)">
+                  {{ t.priority }} ▾
+                </span>
+                @if (priorityDropdownId === t.id) {
+                  <div class="assign-dropdown-menu" (click)="$event.stopPropagation()">
+                    @for (p of priorities; track p.id) {
+                      <div class="assign-dropdown-item" (click)="updatePriority.emit({ticket: t, priorityId: p.id})">
+                        {{ p.name }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
               <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
             </div>
             <div class="tc-title">{{ t.title }}</div>
@@ -123,7 +138,25 @@
         @for (t of colMine; track t.id) {
           <div class="ticket-card is-assigned" (click)="openDrawer.emit(t)">
             <div class="tc-top">
-              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <div class="flex items-center gap-2">
+                <div class="tc-assign-dropdown">
+                  <span class="p-badge cursor-pointer hover:brightness-95 transition-all" 
+                    [ngClass]="getPriorityClass(t.priority)"
+                    (click)="$event.stopPropagation(); togglePriorityDropdown.emit(t.id)">
+                    {{ t.priority }} ▾
+                  </span>
+                  @if (priorityDropdownId === t.id) {
+                    <div class="assign-dropdown-menu" (click)="$event.stopPropagation()">
+                      @for (p of priorities; track p.id) {
+                        <div class="assign-dropdown-item" (click)="updatePriority.emit({ticket: t, priorityId: p.id})">
+                          {{ p.name }}
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <mat-icon *ngIf="t.hasUnreadMessagesForAgent" class="text-rose-500 text-[16px] animate-pulse" title="Nuevo mensaje">mark_email_unread</mat-icon>
+              </div>
               <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
             </div>
             <div class="tc-title">{{ t.title }}</div>
@@ -161,7 +194,25 @@
         @for (t of colInProgress; track t.id) {
           <div class="ticket-card is-processing" (click)="openDrawer.emit(t)">
             <div class="tc-top">
-              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <div class="flex items-center gap-2">
+                <div class="tc-assign-dropdown">
+                  <span class="p-badge cursor-pointer hover:brightness-95 transition-all" 
+                    [ngClass]="getPriorityClass(t.priority)"
+                    (click)="$event.stopPropagation(); togglePriorityDropdown.emit(t.id)">
+                    {{ t.priority }} ▾
+                  </span>
+                  @if (priorityDropdownId === t.id) {
+                    <div class="assign-dropdown-menu" (click)="$event.stopPropagation()">
+                      @for (p of priorities; track p.id) {
+                        <div class="assign-dropdown-item" (click)="updatePriority.emit({ticket: t, priorityId: p.id})">
+                          {{ p.name }}
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <mat-icon *ngIf="t.hasUnreadMessagesForAgent" class="text-rose-500 text-[16px] animate-pulse" title="Nuevo mensaje">mark_email_unread</mat-icon>
+              </div>
             </div>
             <div class="tc-title">{{ t.title }}</div>
             <div class="tc-cat">{{ t.category }}</div>
@@ -198,7 +249,25 @@
         @for (t of colWaiting; track t.id) {
           <div class="ticket-card is-waiting" (click)="openDrawer.emit(t)">
             <div class="tc-top">
-              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+              <div class="flex items-center gap-2">
+                <div class="tc-assign-dropdown">
+                  <span class="p-badge cursor-pointer hover:brightness-95 transition-all" 
+                    [ngClass]="getPriorityClass(t.priority)"
+                    (click)="$event.stopPropagation(); togglePriorityDropdown.emit(t.id)">
+                    {{ t.priority }} ▾
+                  </span>
+                  @if (priorityDropdownId === t.id) {
+                    <div class="assign-dropdown-menu" (click)="$event.stopPropagation()">
+                      @for (p of priorities; track p.id) {
+                        <div class="assign-dropdown-item" (click)="updatePriority.emit({ticket: t, priorityId: p.id})">
+                          {{ p.name }}
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <mat-icon *ngIf="t.hasUnreadMessagesForAgent" class="text-rose-500 text-[16px] animate-pulse" title="Nuevo mensaje">mark_email_unread</mat-icon>
+              </div>
             </div>
             <div class="tc-title">{{ t.title }}</div>
             <div class="tc-cat">{{ t.category }}</div>
@@ -216,7 +285,7 @@
 
             <div class="tc-footer">
               <div class="tc-status-actions">
-                <button class="btn-state btn-state-done" (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Resuelto'})">Resolver</button>
+                <button class="btn-state btn-state-progress" (click)="$event.stopPropagation(); updateStatus.emit({ticket: t, status: 'Procesando'})">Procesar →</button>
               </div>
             </div>
           </div>
@@ -234,6 +303,9 @@
       <div class="col-cards">
         @for (t of colDone; track t.id) {
           <div class="ticket-card is-done opacity-60" (click)="openDrawer.emit(t)">
+            <div class="tc-top mb-2">
+              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            </div>
             <div class="tc-title line-through">{{ t.title }}</div>
             
             <!-- SLA BAR -->

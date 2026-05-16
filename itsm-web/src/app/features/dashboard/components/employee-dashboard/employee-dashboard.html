@@ -14,100 +14,124 @@
     </button>
   </div>
 
-  <div class="employee-kanban-section">
-    <div class="section-header">
-      <h3 class="section-title">Tickets Activos</h3>
+  <div class="view-header mt-8 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-800">Mis Incidencias</h1>
+      <p class="text-slate-500">Estado en tiempo real de tus solicitudes</p>
     </div>
+  </div>
 
-    @if (loadingList) {
-      <div class="loading-center">
-        <mat-spinner diameter="40"></mat-spinner>
+  @if (loadingList) {
+    <div class="loading-center">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (incidentsOpen.length === 0 && incidentsResolved.length === 0) {
+    <div class="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
+      <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+        <mat-icon style="font-size: 32px; width: 32px; height: 32px;">verified</mat-icon>
       </div>
-    } @else if (incidentsOpen.length === 0 && incidentsResolved.length === 0) {
-      <div class="empty-state-card">
-        <div class="empty-illustration">
-          <mat-icon>verified</mat-icon>
-        </div>
-        <h3>¡Todo al día!</h3>
-        <p>No tienes incidencias abiertas en este momento.</p>
-        <button class="btn-primary" (click)="goToCreate.emit()">Crear incidencia</button>
-      </div>
-    } @else {
-      <div class="employee-kanban-cols">
-        <!-- SUBCOL: ACTIVOS -->
-        <div class="emp-kanban-col">
-          <div class="col-head">
-            <span class="head-dot dot-blue"></span>
-            En Curso ({{ incidentsOpen.length }})
-          </div>
-          <div class="col-items">
-            @for (t of incidentsOpen; track t.id) {
-              <div class="emp-ticket-card" (click)="openDrawer.emit(t)" [attr.data-status]="t.status">
-                <div class="card-top-row">
-                  <span class="p-badge-outline" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
-                  <span class="status-label">{{ t.status }}</span>
-                </div>
-                <div class="card-title">{{ t.title }}</div>
-                <div class="card-meta">
-                  <span class="card-cat">{{ t.category }}</span>
-                </div>
-                <div class="card-bottom">
-                   <span class="card-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
-                </div>
-                @if (t.assignedTo) {
-                  <div class="card-agent-bar">
-                    <mat-icon>person</mat-icon> {{ t.assignedTo }}
+      <h3 class="text-xl font-bold text-slate-800 mb-2">¡Todo al día!</h3>
+      <p class="text-slate-500 mb-6">No tienes incidencias abiertas en este momento.</p>
+      <button class="bg-sky-500 hover:bg-sky-600 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-sm" (click)="goToCreate.emit()">
+        Crear mi primera incidencia
+      </button>
+    </div>
+  } @else {
+      <div class="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm overflow-x-auto">
+        <div class="kanban-board kanban-3col">
+          <!-- SUBCOL: ACTIVOS -->
+          <div class="kanban-col">
+            <div class="col-header col-progress">
+              <span class="col-dot"></span><span class="col-name">PROCESANDO</span>
+              <span class="col-count">{{ colActive.length }}</span>
+            </div>
+            <div class="col-cards">
+              @for (t of colActive; track t.id) {
+                <div class="ticket-card is-progress" (click)="openDrawer.emit(t)">
+                  <div class="tc-top">
+                    <div class="flex items-center gap-2">
+                      <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+                      <mat-icon *ngIf="t.hasUnreadMessagesForEmployee" class="text-rose-500 text-[16px] animate-pulse" title="Nuevo mensaje">mark_email_unread</mat-icon>
+                    </div>
+                    <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
                   </div>
-                }
-                @if (hasUnreadComments(t.id)) {
-                  <div class="unread-banner">Nuevo mensaje</div>
-                }
-              </div>
-            }
-          </div>
-        </div>
+                  <div class="tc-title">{{ t.title }}</div>
+                  <div class="tc-cat">{{ t.category }}</div>
 
-        <!-- SUBCOL: RESUELTOS (24H) -->
-        <div class="emp-kanban-col">
-          <div class="col-head">
-            <span class="head-dot dot-green"></span>
-            Resueltos ({{ incidentsResolved.length }})
+
+                </div>
+              }
+              @if (colActive.length === 0) { <div class="col-empty">Vacío</div> }
+            </div>
           </div>
-          <div class="col-items">
-            @for (t of incidentsResolved; track t.id) {
-              <div class="emp-ticket-card resolved-dim" (click)="openDrawer.emit(t)" data-status="Resuelto">
-                <div class="card-top-row">
-                  <span class="p-badge-outline opacity-50" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
-                  <span class="status-label">Resuelto</span>
+
+          <!-- SUBCOL: MENSAJES PENDIENTES -->
+          <div class="kanban-col">
+            <div class="col-header col-waiting">
+              <span class="col-dot"></span><span class="col-name">EN ESPERA</span>
+              <span class="col-count">{{ colPendingMessages.length }}</span>
+            </div>
+            <div class="col-cards">
+              @for (t of colPendingMessages; track t.id) {
+                <div class="ticket-card is-waiting" (click)="openDrawer.emit(t)">
+                  <div class="tc-top">
+                    <div class="flex items-center gap-2">
+                      <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+                      <mat-icon *ngIf="t.hasUnreadMessagesForEmployee" class="text-amber-500 text-[16px] animate-pulse" title="Nuevo mensaje">mark_email_unread</mat-icon>
+                    </div>
+                    <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="tc-title">{{ t.title }}</div>
+                  <div class="tc-cat">{{ t.category }}</div>
+
+
                 </div>
-                <div class="card-title">{{ t.title }}</div>
-                <div class="card-meta">
-                  <span class="card-cat">{{ t.category }}</span>
-                </div>
-                
-                <div class="card-rating" (click)="$event.stopPropagation()">
-                  <span class="rating-label">Valorar servicio:</span>
-                  <div class="stars">
-                    @for (star of [1,2,3,4,5]; track star) {
-                      <mat-icon 
-                        [class.active]="(t.rating || 0) >= star"
-                        (click)="onRate($event, t, star)"
-                      >
-                        {{ (t.rating || 0) >= star ? 'star' : 'star_outline' }}
-                      </mat-icon>
-                    }
+              }
+              @if (colPendingMessages.length === 0) { <div class="col-empty">Vacío</div> }
+            </div>
+          </div>
+
+          <!-- SUBCOL: RESUELTOS (24H) -->
+          <div class="kanban-col">
+            <div class="col-header col-done">
+              <span class="col-dot"></span><span class="col-name">RESUELTOS</span>
+              <span class="col-count">{{ incidentsResolved.length }}</span>
+            </div>
+            <div class="col-cards">
+              @for (t of incidentsResolved; track t.id) {
+                <div class="ticket-card resolved" (click)="openDrawer.emit(t)">
+                  <div class="tc-top">
+                    <span class="p-badge opacity-50" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+                    <span class="tc-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="tc-title">{{ t.title }}</div>
+                  <div class="tc-cat">{{ t.category }}</div>
+                  
+                  <div class="card-rating" (click)="$event.stopPropagation()">
+                    <span class="rating-label">Valorar servicio:</span>
+                    <div class="stars">
+                      @for (star of [1,2,3,4,5]; track star) {
+                        <mat-icon 
+                          [class.active]="(t.rating || 0) >= star"
+                          (click)="onRate($event, t, star)"
+                        >
+                          {{ (t.rating || 0) >= star ? 'star' : 'star_outline' }}
+                        </mat-icon>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="tc-footer mt-4">
+                    <button class="bg-emerald-100 text-emerald-700 w-full py-2 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-200 transition-colors">
+                      RESOLVER
+                    </button>
                   </div>
                 </div>
-
-                <div class="card-bottom">
-                   <span class="card-date">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</span>
-                </div>
-              </div>
-            }
+              }
+              @if (incidentsResolved.length === 0) { <div class="col-empty">Vacío</div> }
+            </div>
           </div>
         </div>
       </div>
     }
-  </div>
-
 </div>

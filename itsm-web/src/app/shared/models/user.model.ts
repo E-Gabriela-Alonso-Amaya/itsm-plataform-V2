@@ -45,9 +45,15 @@ export interface Incident {
   totalPausedMs?: number;
   rating?: number;
   
+  hasUnreadMessagesForAgent?: boolean;
+  hasUnreadMessagesForEmployee?: boolean;
+  
   attachments?: Attachment[];
   comments?: Comment[];
   company?: string;
+  pendingAssigneeId?: string | null;
+  pendingAssigneeName?: string | null;
+  pendingAssignedAt?: string | null;
 }
 
 
@@ -55,7 +61,7 @@ export interface CreateIncidentRequest {
   title: string;
   description: string;
   categoryId: number;
-  priorityId: number;
+  priorityId?: number;
   assignToMe?: boolean;
   assignedToId?: string | null; 
 }

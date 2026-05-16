@@ -3,7 +3,7 @@
     <button class="hamburger-btn" (click)="toggleMobileMenu()">
       <mat-icon>menu</mat-icon>
     </button>
-    <span class="topbar-logo">HELPDESK</span>
+    <span class="topbar-logo" (click)="onLogoClick()" style="cursor: pointer;">HELPDESK</span>
     <!-- MENÚ PRINCIPAL HORIZONTAL -->
     <nav class="topbar-nav" [class.mobile-open]="mobileMenuOpen">
       @if (isAdmin) {
@@ -19,7 +19,7 @@
           Proyectos y Empresas
           <div class="active-indicator"></div>
         </a>
-        <a class="nav-link" [class.active]="activeView === 'admin_ui' || activeView === 'admin_audit'" (click)="onSetView('admin_ui')">
+        <a class="nav-link" [class.active]="activeView === 'settings'" (click)="onSetView('settings')">
           Ajustes del Sistema
           <div class="active-indicator"></div>
         </a>
@@ -32,6 +32,10 @@
           Historial
           <div class="active-indicator"></div>
         </a>
+        <a class="nav-link" [class.active]="activeView === 'settings'" (click)="onSetView('settings')">
+          Ajustes
+          <div class="active-indicator"></div>
+        </a>
       } @else {
         <a class="nav-link" [class.active]="activeView === 'dashboard'" (click)="onSetView('dashboard')">
           Dashboard
@@ -41,13 +45,17 @@
           Historial
           <div class="active-indicator"></div>
         </a>
+        <a class="nav-link" [class.active]="activeView === 'settings'" (click)="onSetView('settings')">
+          Ajustes
+          <div class="active-indicator"></div>
+        </a>
       }
     </nav>
 
     <span class="topbar-spacer"></span>
 
     <!-- BOTÓN FAB MÓVIL PARA EMPRESAS -->
-    <button class="company-drawer-btn" (click)="toggleSidebar.emit()" title="Seleccionar Empresa">
+    <button *ngIf="!isEmployee" class="company-drawer-btn" (click)="toggleSidebar.emit()" title="Seleccionar Empresa">
       <mat-icon>business</mat-icon>
     </button>
 

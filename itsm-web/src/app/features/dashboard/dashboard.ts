@@ -53,8 +53,9 @@ import { MyIncidentsComponent } from './components/my-incidents/my-incidents';
 import { TicketInspectorComponent } from './components/ticket-inspector/ticket-inspector';
 import { DashboardHeaderComponent } from './components/dashboard-header/dashboard-header';
 import { StatusMessageComponent } from './components/status-message/status-message';
+import { SystemSettingsComponent } from './components/system-settings/system-settings';
 
-type ActiveView = 'dashboard' | 'queue' | 'all' | 'mine' | 'profile' | 'admin' | 'admin_users' | 'admin_invite' | 'admin_matrix' | 'admin_projects' | 'admin_config_tech' | 'admin_ui' | 'admin_audit' | 'agent_work' | 'agent_history';
+type ActiveView = 'dashboard' | 'queue' | 'all' | 'mine' | 'profile' | 'admin' | 'admin_users' | 'admin_invite' | 'admin_matrix' | 'admin_projects' | 'admin_config_tech' | 'admin_ui' | 'admin_audit' | 'agent_work' | 'agent_history' | 'settings';
 
 const STATUS_COL: Record<string, string> = {
   Nuevo: 'new',
@@ -68,12 +69,12 @@ const STATUS_COL: Record<string, string> = {
 };
 
 const PRIORITY_ORDER: Record<string, number> = {
-  //todo!!!
-  Crítica: 1,
-  Critica: 1,
-  Alta: 2,
-  Normal: 3,
-  Baja: 4,
+  'Crítica': 1,
+  'Critica': 1,
+  'Alta': 2,
+  'Media': 3,
+  'Normal': 3,
+  'Baja': 4,
 };
 
 @Component({
@@ -102,6 +103,7 @@ const PRIORITY_ORDER: Record<string, number> = {
     MyIncidentsComponent,
     TicketInspectorComponent,
     DashboardHeaderComponent,
+    SystemSettingsComponent,
     StatusMessageComponent,
   ],
   templateUrl: 'dashboard.html',
@@ -143,7 +145,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   commentsByTicket: Record<string, number> = {};
   ticketsWithUnreadComments: Set<string> = new Set<string>();
 
-  // ESTADOS
+  priorityDropdownId: string | null = null;
   loadingList = false;
   loadingQueue = false;
   filterPriority = '';
@@ -317,7 +319,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ─── META
   loadMeta(): void {
     this.categoryService.getAll().subscribe((d: Category[]) => (this.categories = d));
-    this.priorityService.getAll().subscribe((d: Priority[]) => (this.priorities = d));
+    this.priorityService.getAll().subscribe((d: Priority[]) => {
+      const seen = new Set();
+      this.priorities = d.filter(p => {
+        const val = p.name.trim();
+        if (seen.has(val)) return false;
+        seen.add(val);
+        return true;
+      });
+    });
     this.statusService.getAll().subscribe((d: Status[]) => (this.statuses = d));
     
     if (this.isAdminOrAgent()) {
@@ -428,6 +438,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       } else if (view === 'mine') {
         this.loadMyCreated();
       }
+    }
+    
+    // Si hay un ticket abierto, refrescamos sus comentarios y adjuntos
+    if (this.drawerOpen && this.selectedTicket) {
+      this.loadComments(this.selectedTicket.id);
+      this.loadAttachments(this.selectedTicket.id);
     }
   }
 
@@ -712,8 +728,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private sortByPriority(data: Incident[]): Incident[] {
     return [...data].sort((a, b) => {
-      const pa = PRIORITY_ORDER[a.priority] ?? 99;
-      const pb = PRIORITY_ORDER[b.priority] ?? 99;
+      const pa = a.priorityOrder ?? 99;
+      const pb = b.priorityOrder ?? 99;
       return pa !== pb
         ? pa - pb
         : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -790,7 +806,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadingComments = true;
     this.commentService.getByIncident(incidentId).subscribe({
       next: (data: Comment[]) => {
-        this.comments = data.map((c) => ({ ...c, isOwn: c.authorId === this.user?.id }));
+        console.log('Comments loaded for ticket ' + incidentId + ':', data);
+        this.comments = data.map((c) => ({ ...c, isOwn: String(c.authorId) === String(this.user?.id) }));
         this.loadingComments = false;
         this.markCommentsAsRead(incidentId, data);
         this.cdr.detectChanges();
@@ -819,7 +836,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (
             esperaStatus &&
             !this.selectedTicket.isClosed &&
-            this.selectedTicket.status !== 'Espera info'
+            this.selectedTicket.status === 'Procesando' // Solo si estaba procesando
           ) {
             this.changeTicketStatus(this.selectedTicket, esperaStatus.name);
           }
@@ -919,7 +936,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.updateTicketInLists(updated);
         this.selectedTicket = updated;
         if (this.drawerOpen) this.loadHistory(updated.id);
-        this.successMsg = `✓ Asignado a ${updated.assignedTo}`;
+        
+        if (updated.pendingAssigneeId) {
+          this.successMsg = `✓ Asignación enviada a ${updated.pendingAssigneeName} (Pendiente)`;
+        } else {
+          this.successMsg = `✓ Asignado a ${updated.assignedTo}`;
+        }
+        
         this.assigningAgent = false;
         if (this.activeView === 'dashboard' || this.activeView === 'queue') this.loadQueue();
         if (this.isAdmin()) {
@@ -936,6 +959,51 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.assigningAgent = false;
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  confirmAssignment(ticket: Incident): void {
+    this.successMsg = '⌛ Confirmando asignación...';
+    this.cdr.detectChanges();
+    this.incidentService.confirmAssignment(ticket.id).subscribe({
+      next: (updated) => {
+        this.updateTicketInLists(updated);
+        this.selectedTicket = updated;
+        this.loadHistory(updated.id);
+        this.successMsg = '✓ Asignación confirmada';
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 4000);
+      },
+      error: (err) => {
+        this.errorMsg = err.error?.error || 'Error al confirmar';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  rejectAssignment(ticket: Incident): void {
+    if (!confirm('¿Rechazar esta asignación? El ticket volverá al técnico anterior.')) return;
+    this.successMsg = '⌛ Rechazando asignación...';
+    this.cdr.detectChanges();
+    this.incidentService.rejectAssignment(ticket.id).subscribe({
+      next: (updated) => {
+        this.updateTicketInLists(updated);
+        this.selectedTicket = updated;
+        this.loadHistory(updated.id);
+        this.successMsg = '✓ Asignación rechazada';
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.successMsg = '';
+          this.cdr.detectChanges();
+        }, 4000);
+      },
+      error: (err) => {
+        this.errorMsg = err.error?.error || 'Error al rechazar';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -1212,6 +1280,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       localStorage.setItem(this.readStorageKey, JSON.stringify([...this.readCommentIds]));
     } catch {}
+    
+    // Actualizar flags en el objeto local para feedback inmediato
+    const ticket = this.incidents.find(i => i.id === ticketId);
+    if (ticket) {
+      ticket.hasUnreadMessagesForAgent = false;
+      ticket.hasUnreadMessagesForEmployee = false;
+    }
+    if (this.selectedTicket && this.selectedTicket.id === ticketId) {
+      this.selectedTicket.hasUnreadMessagesForAgent = false;
+      this.selectedTicket.hasUnreadMessagesForEmployee = false;
+    }
+
     const newSet = new Set<string>(this.ticketsWithUnreadComments);
     newSet.delete(ticketId);
     this.ticketsWithUnreadComments = newSet;
@@ -1222,6 +1302,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     try {
       localStorage.setItem(this.readStorageKey, JSON.stringify([...this.readCommentIds]));
     } catch {}
+  }
+
+  addStatusMessage(msg: string, type: 'success' | 'error' = 'success'): void {
+    if (type === 'success') {
+      this.successMsg = msg;
+      this.errorMsg = '';
+    } else {
+      this.errorMsg = msg;
+      this.successMsg = '';
+    }
+    setTimeout(() => {
+      if (type === 'success' && this.successMsg === msg) this.successMsg = '';
+      if (type === 'error' && this.errorMsg === msg) this.errorMsg = '';
+      this.cdr.detectChanges();
+    }, 4000);
+    this.cdr.detectChanges();
   }
 
   refreshCurrentView(): void {
@@ -1241,5 +1337,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     this.loadStats();
     this.cdr.detectChanges();
+  }
+
+  togglePriorityDropdown(id: string): void {
+    this.priorityDropdownId = (this.priorityDropdownId === id) ? null : id;
+  }
+
+  changeTicketPriority(ticket: Incident, priorityId: number): void {
+    this.incidentService.changePriority(ticket.id, priorityId).subscribe({
+      next: (updated) => {
+        const idx = this.incidents.findIndex(i => i.id === updated.id);
+        if (idx !== -1) this.incidents[idx] = updated;
+        
+        if (this.selectedTicket?.id === ticket.id) {
+          this.selectedTicket = updated;
+          this.loadHistory(ticket.id);
+        }
+
+        this.loadData(); // Reload to refresh Kanban columns
+        this.priorityDropdownId = null;
+        this.addStatusMessage(`✓ Prioridad de "${ticket.title}" cambiada a ${updated.priority}`, 'success');
+      },
+      error: () => this.addStatusMessage('Error al cambiar prioridad', 'error')
+    });
   }
 }

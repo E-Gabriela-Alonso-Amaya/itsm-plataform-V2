@@ -247,7 +247,7 @@ class AttachmentController extends AbstractController
             'description'  => $a->getDescription(),
             'uploadedBy'   => $a->getUploadedBy()->getName(),
             'uploadedById' => (string) $a->getUploadedBy()->getId(),
-            'createdAt'    => $a->getCreatedAt()?->format('d/m/Y H:i'),
+            'createdAt'    => $a->getCreatedAt()?->format('c'),
             'isImage'      => str_starts_with($a->getMimeType(), 'image/'),
         ];
     }
