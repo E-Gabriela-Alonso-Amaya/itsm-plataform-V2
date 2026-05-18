@@ -69,6 +69,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   loadingCompanies = false;
   showCompanyForm = false;
   savingCompany = false;
+  deletingCompanyId: string | null = null;
   
   // NAVEGACIÓN DE EMPRESAS
   projectView: 'add' | 'list' | 'edit' = 'list';
@@ -85,6 +86,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
   auditLogs: any[] = [];
   loadingAudit = false;
 
+  // HISTORIAL DE EMPRESAS
   // ASIGNACIÓN (matrix) — tarjetas expandibles
   expandedAgentId: string | null = null;
   savingMatrixId: string | null = null;
@@ -585,6 +587,7 @@ export class AdminPanelComponent implements OnInit, OnChanges {
     });
   }
 
+
   // ══════════════════════════════════════════════════════════════
   // AJUSTES DEL SISTEMA
   // ══════════════════════════════════════════════════════════════
@@ -694,6 +697,28 @@ export class AdminPanelComponent implements OnInit, OnChanges {
         this.cdr.detectChanges();
       },
       error: (e) => { this.errorMsg = e.error?.error || 'Error al crear empresa'; this.savingCompany = false; this.cdr.detectChanges(); }
+    });
+  }
+
+  deleteCompany(company: any): void {
+    if (!confirm(`¿Eliminar la empresa "${company.name}"?`)) return;
+    this.deletingCompanyId = company.id;
+    this.clearMsg();
+    this.adminService.deleteCompany(company.id).subscribe({
+      next: () => {
+        this.companies = this.companies.filter(c => c.id !== company.id);
+        if (this.editingCompany?.id === company.id) {
+          this.setProjectView('list');
+        }
+        this.successMsg = `Empresa "${company.name}" eliminada`;
+        this.deletingCompanyId = null;
+        this.cdr.detectChanges();
+      },
+      error: (e: any) => {
+        this.errorMsg = e.error?.error || 'No se pudo eliminar';
+        this.deletingCompanyId = null;
+        this.cdr.detectChanges();
+      }
     });
   }
 

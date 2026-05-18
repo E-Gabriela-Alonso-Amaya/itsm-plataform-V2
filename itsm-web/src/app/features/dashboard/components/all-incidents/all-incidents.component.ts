@@ -40,7 +40,9 @@ export class AllIncidentsComponent {
   @Input() statuses: Status[] = [];
   @Input() agents: Agent[] = [];
   @Input() users: User[] = [];
-  @Input() user!: User;
+  @Input() user: User | null = null;
+  @Input() pageTitle = 'Todas las incidencias';
+  @Input() pageSubtitle = 'Busca, filtra y gestiona el historial completo';
 
   // Inspector
   @Input() drawerOpen = false;

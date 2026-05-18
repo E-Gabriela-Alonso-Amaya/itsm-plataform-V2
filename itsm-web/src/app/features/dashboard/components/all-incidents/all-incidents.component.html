@@ -4,8 +4,8 @@
 
 <div class="view-header">
   <div class="view-header-left">
-    <h1 class="view-title">Todas las incidencias</h1>
-    <p class="view-sub">Busca, filtra y gestiona el historial completo</p>
+    <h1 class="view-title">{{ pageTitle }}</h1>
+    <p class="view-sub">{{ pageSubtitle }}</p>
   </div>
   <div class="view-header-right">
     <span class="results-badge" *ngIf="hasSearched">
@@ -114,7 +114,7 @@
           </select>
           <mat-icon class="select-arrow">expand_more</mat-icon>
         </div>
-        @if (user.roles.includes('ROLE_ADMIN')) {
+        @if (user?.roles?.includes('ROLE_ADMIN')) {
         <div class="custom-select-wrap">
           <label class="select-label">Agente</label>
           <select class="custom-select" [(ngModel)]="filterAgent">
@@ -311,7 +311,7 @@
       <div class="ins-col-header"><mat-icon>chat_bubble_outline</mat-icon> Chat</div>
       <div class="ins-chat-scroll">
         @for (msg of selectedTicket!.comments ?? []; track msg.id) {
-        <div class="ins-msg" [class.ins-msg-mine]="msg.authorId === user.id">
+        <div class="ins-msg" [class.ins-msg-mine]="msg.authorId === user?.id">
           <div class="ins-bubble">{{ msg.content }}</div>
           <div class="ins-msg-meta">{{ msg.authorName }} · {{ msg.createdAt | date: 'dd-MM-yyyy HH:mm' }}</div>
         </div>

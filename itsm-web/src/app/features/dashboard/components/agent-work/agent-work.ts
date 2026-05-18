@@ -34,6 +34,7 @@ export class AgentWorkComponent {
   @Output() goToCreate = new EventEmitter<void>();
   @Output() loadQueue = new EventEmitter<void>();
   @Output() clearFilters = new EventEmitter<void>();
+  @Output() viewHistory = new EventEmitter<void>();
   @Output() togglePriorityDropdown = new EventEmitter<string>();
   @Output() updatePriority = new EventEmitter<{ticket: Incident, priorityId: number}>();
 

@@ -22,16 +22,33 @@ export class AdminDashboardComponent {
   @Input() priorities: Priority[] = [];
   @Input() categories: Category[] = [];
   @Input() isMobile: boolean = false;
+  @Input() isTablet: boolean = false;
   @Input() activeKanbanTab: string = 'new';
   @Input() agents: Agent[] = [];
   @Input() assignDropdownId: string | null = null;
   @Input() assigningId: string | null = null;
   @Input() selectedTicket: Incident | null = null;
-  @Input() selectedCompany: string = 'global';
+  private _selectedCompany: string = 'global';
+
+  @Input()
+  set selectedCompany(value: string) {
+    this._selectedCompany = value;
+    if (value === 'global') {
+      this.activeGlobalChart = 'workload';
+    } else {
+      this.activeGlobalChart = null;
+    }
+  }
+
+  get selectedCompany(): string {
+    return this._selectedCompany;
+  }
+
   @Input() currentUserId: string = '';
   @Input() currentUserRole: string = '';
   @Input() goalResolutionTime: number = 2;
   @Input() priorityDropdownId: string | null = null;
+  @Output() viewHistory = new EventEmitter<void>();
 
   // Kanban Columns
   @Input() colNew: Incident[] = [];
@@ -47,7 +64,19 @@ export class AdminDashboardComponent {
   @Input() colAdminWaiting: Incident[] = [];
   @Input() colAdminDone: Incident[] = [];
 
-  activeGlobalChart: 'workload' | 'response' | 'satisfaction' = 'workload';
+  activeGlobalChart: 'workload' | 'response' | 'satisfaction' | 'performance' | null = 'workload';
+
+  toggleChart(chart: 'workload' | 'response' | 'satisfaction' | 'performance'): void {
+    if (this.selectedCompany === 'global') {
+      this.activeGlobalChart = chart;
+    } else {
+      if (this.activeGlobalChart === chart) {
+        this.activeGlobalChart = null;
+      } else {
+        this.activeGlobalChart = chart;
+      }
+    }
+  }
 
   get workloadChartData() {
     const data = [];
@@ -55,14 +84,27 @@ export class AdminDashboardComponent {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const label = d.toLocaleDateString('es-ES', { weekday: 'short' });
-      const count = this.allCompanyIncidents.filter(inc => {
+      
+      const createdCount = this.allCompanyIncidents.filter(inc => {
         const cDate = new Date(inc.createdAt);
         return cDate.getDate() === d.getDate() && cDate.getMonth() === d.getMonth() && cDate.getFullYear() === d.getFullYear();
       }).length;
-      data.push({ label, value: count, fullDate: d });
+
+      const resolvedCount = this.allCompanyIncidents.filter(inc => {
+        if (!inc.resolvedAt && !inc.updatedAt) return false;
+        if (!inc.isClosed && inc.status !== 'Resuelto' && inc.status !== 'Cerrado') return false;
+        const rDate = new Date(inc.resolvedAt || inc.updatedAt!);
+        return rDate.getDate() === d.getDate() && rDate.getMonth() === d.getMonth() && rDate.getFullYear() === d.getFullYear();
+      }).length;
+
+      data.push({ label, created: createdCount, resolved: resolvedCount, fullDate: d });
     }
-    const highest = Math.max(...data.map(d => d.value), 10);
-    return data.map(d => ({ ...d, height: (d.value / highest) * 100 }));
+    const highestVal = Math.max(...data.map(d => Math.max(d.created, d.resolved)), 5);
+    return data.map(d => ({
+      ...d,
+      createdHeight: (d.created / highestVal) * 100,
+      resolvedHeight: (d.resolved / highestVal) * 100
+    }));
   }
 
   get responseChartData() {
@@ -95,6 +137,51 @@ export class AdminDashboardComponent {
     return data.map(d => ({ ...d, height: (d.value / highest) * 100 }));
   }
 
+  get responseLinePoints() {
+    const rawData = this.responseChartData;
+    const highestVal = Math.max(...rawData.map(d => d.value), 4);
+    
+    const svgWidth = 600;
+    const svgHeight = 200;
+    const paddingX = 40;
+    const paddingY = 30;
+    
+    const usableWidth = svgWidth - paddingX * 2;
+    const usableHeight = svgHeight - paddingY * 2;
+    const stepX = usableWidth / 6;
+
+    return rawData.map((d, i) => {
+      const x = paddingX + i * stepX;
+      const ratio = highestVal > 0 ? d.value / highestVal : 0;
+      const y = svgHeight - paddingY - (ratio * usableHeight);
+      return {
+        x,
+        y,
+        label: d.label,
+        value: d.value,
+        fullDate: d.fullDate
+      };
+    });
+  }
+
+  get responseLineChartPath(): string {
+    const points = this.responseLinePoints;
+    if (points.length === 0) return '';
+    return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  }
+
+  get responseLineChartAreaPath(): string {
+    const points = this.responseLinePoints;
+    if (points.length === 0) return '';
+    const path = this.responseLineChartPath;
+    const first = points[0];
+    const last = points[points.length - 1];
+    const svgHeight = 200;
+    const paddingY = 30;
+    const baselineY = svgHeight - paddingY;
+    return `${path} L ${last.x.toFixed(1)} ${baselineY} L ${first.x.toFixed(1)} ${baselineY} Z`;
+  }
+
   get satisfactionChartData() {
     const data = [
       { label: '5 Estrellas', stars: 5, value: 0 },
@@ -113,6 +200,47 @@ export class AdminDashboardComponent {
 
     const highest = Math.max(...data.map(d => d.value), 5);
     return data.map(d => ({ ...d, width: (d.value / highest) * 100 }));
+  }
+
+  get allAgentsPerformanceData() {
+    const pureAgents = this.agents.filter(a => !a.roles.includes('ROLE_ADMIN'));
+    
+    let companyAgents = pureAgents;
+    if (this.selectedCompany !== 'global') {
+      companyAgents = pureAgents.filter(agent => 
+        agent.companies?.some(c => c.id === this.selectedCompany)
+      );
+    }
+    
+    return companyAgents.map(agent => {
+      const assignedTickets = this.allCompanyIncidents.filter(i => i.assignedToId === agent.id);
+      const resolvedTickets = assignedTickets.filter(i => i.isClosed || i.status === 'Resuelto' || i.status === 'Cerrado');
+      
+      const assignedCount = assignedTickets.length;
+      const resolvedCount = resolvedTickets.length;
+      const performance = assignedCount > 0 ? Math.round((resolvedCount / assignedCount) * 100) : 0;
+      
+      let avgResolutionTime = 0;
+      const resolvedWithTimes = resolvedTickets.filter(i => i.createdAt && (i.resolvedAt || i.updatedAt));
+      if (resolvedWithTimes.length > 0) {
+        let totalHours = 0;
+        resolvedWithTimes.forEach(inc => {
+          const start = new Date(inc.createdAt).getTime();
+          const end = new Date(inc.resolvedAt || inc.updatedAt!).getTime();
+          totalHours += (end - start) / (1000 * 60 * 60);
+        });
+        avgResolutionTime = parseFloat((totalHours / resolvedWithTimes.length).toFixed(1));
+      }
+      
+      return {
+        id: agent.id,
+        name: agent.name,
+        assigned: assignedCount,
+        resolved: resolvedCount,
+        performance: performance,
+        avgTime: avgResolutionTime
+      };
+    }).sort((a, b) => b.assigned - a.assigned);
   }
 
   @Output() setDashboardTab = new EventEmitter<'queue' | 'my-tickets'>();

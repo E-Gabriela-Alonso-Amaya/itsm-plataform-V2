@@ -104,13 +104,14 @@
   display: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .kanban-tabs {
     display: flex;
     gap: 6px;
     overflow-x: auto;
     padding: 8px 0;
     margin-bottom: 12px;
+    flex-wrap: wrap;
   }
 
   .kanban-tab {
@@ -132,7 +133,7 @@
     border-color: #1e293b;
   }
 
-  /* Ocultar grid en móvil */
+  /* Ocultar grid en móvil/tablet y mostrar solo la columna activa */
   .kanban-board {
     display: block !important;
   }

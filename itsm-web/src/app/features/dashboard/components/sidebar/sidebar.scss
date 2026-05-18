@@ -217,8 +217,40 @@
     align-items: center;
   }
 
+  .company-sidebar.open {
+    width: 280px;
+    padding: 16px;
+    align-items: flex-start;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  }
+
   .company-list {
     align-items: center;
+  }
+
+  .company-sidebar.open .company-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+
+  .company-sidebar.open .company-name {
+    display: block;
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .company-sidebar.open .company-notifications {
+    opacity: 1;
+    position: static;
+    flex-direction: row;
+    margin-left: auto;
+    padding: 0;
   }
 
   .company-item {
@@ -315,6 +347,9 @@
 
       .company-name {
         display: block; // Show names in Drawer
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
       }
 
       .company-icon-circle {

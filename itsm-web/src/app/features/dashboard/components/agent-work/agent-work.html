@@ -3,11 +3,18 @@
     <h1 class="text-2xl font-bold text-slate-800">Mi Trabajo</h1>
     <p class="text-slate-500">Gestión de tus tickets asignados y métricas personales</p>
   </div>
-  <button class="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm"
-    (click)="goToCreate.emit()">
-    <mat-icon class="text-sm">add</mat-icon>
-    Nueva Incidencia
-  </button>
+  <div class="flex items-center gap-3">
+    <button class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-all border border-slate-200"
+      (click)="viewHistory.emit()">
+      <mat-icon class="text-sm">history</mat-icon>
+      Historial
+    </button>
+    <button class="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-bold transition-all shadow-sm"
+      (click)="goToCreate.emit()">
+      <mat-icon class="text-sm">add</mat-icon>
+      Nueva Incidencia
+    </button>
+  </div>
 </div>
 
 <!-- MÉTRICAS AGENTE -->

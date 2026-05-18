@@ -34,6 +34,17 @@ class CompanyFilter extends SQLFilter
         // Convertimos cada UUID string a binario usando la función de MySQL 8
         $binIds = array_map(fn($id) => "UUID_TO_BIN('" . trim($id) . "')", $ids);
 
-        return sprintf('%s.company_id IN (%s)', $targetTableAlias, implode(',', $binIds));
+        $companyColumn = sprintf('%s.company_id', $targetTableAlias);
+        $whereIn = sprintf('%s IN (%s)', $companyColumn, implode(',', $binIds));
+
+        // Permitir entidades globales sin empresa asignada cuando la relación es nullable.
+        $mapping = $targetEntity->getAssociationMapping('company');
+        $nullable = $mapping['joinColumns'][0]['nullable'] ?? false;
+
+        if ($nullable) {
+            return sprintf('(%s IS NULL OR %s)', $companyColumn, $whereIn);
+        }
+
+        return $whereIn;
     }
 }

@@ -363,6 +363,10 @@
                 <div class="font-bold text-slate-700">{{ c.name }}</div>
                 <div class="text-xs text-slate-400">Creada: {{ c.createdAt }}</div>
               </div>
+              <button class="ap-btn-icon btn-danger" title="Eliminar empresa" [disabled]="deletingCompanyId === c.id" (click)="$event.stopPropagation(); deleteCompany(c)">
+                <mat-icon *ngIf="deletingCompanyId !== c.id">delete</mat-icon>
+                <mat-spinner diameter="18" *ngIf="deletingCompanyId === c.id"></mat-spinner>
+              </button>
               <button class="ap-btn-icon"><mat-icon>chevron_right</mat-icon></button>
             </div>
           }
@@ -790,5 +794,7 @@
     }
   </div>
   }
+
+  <!-- TODO: Historial moved to a dedicated ticket history page -->
 
 </div>

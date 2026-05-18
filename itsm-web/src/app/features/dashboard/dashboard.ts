@@ -46,7 +46,6 @@ import { AdminPanelComponent } from '../admin/admin-panel';
 import { CompanyService } from '../../core/services/company.service';
 import { ProfileComponent } from './components/profile/profile';
 import { AgentWorkComponent } from './components/agent-work/agent-work';
-import { AgentHistoryComponent } from './components/agent-history/agent-history';
 import { EmployeeDashboardComponent } from './components/employee-dashboard/employee-dashboard';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard';
 import { MyIncidentsComponent } from './components/my-incidents/my-incidents';
@@ -55,7 +54,7 @@ import { DashboardHeaderComponent } from './components/dashboard-header/dashboar
 import { StatusMessageComponent } from './components/status-message/status-message';
 import { SystemSettingsComponent } from './components/system-settings/system-settings';
 
-type ActiveView = 'dashboard' | 'queue' | 'all' | 'mine' | 'profile' | 'admin' | 'admin_users' | 'admin_invite' | 'admin_matrix' | 'admin_projects' | 'admin_config_tech' | 'admin_ui' | 'admin_audit' | 'agent_work' | 'agent_history' | 'settings';
+type ActiveView = 'dashboard' | 'queue' | 'all' | 'mine' | 'profile' | 'admin' | 'admin_users' | 'admin_invite' | 'admin_matrix' | 'admin_projects' | 'admin_config_tech' | 'admin_ui' | 'admin_audit' | 'admin_history' | 'agent_work' | 'agent_history' | 'settings';
 
 const STATUS_COL: Record<string, string> = {
   Nuevo: 'new',
@@ -97,7 +96,6 @@ const PRIORITY_ORDER: Record<string, number> = {
     AdminPanelComponent,
     ProfileComponent,
     AgentWorkComponent,
-    AgentHistoryComponent,
     EmployeeDashboardComponent,
     AdminDashboardComponent,
     MyIncidentsComponent,
@@ -205,6 +203,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  get myHistoryTickets(): Incident[] {
+    return this.incidents.filter(i =>
+      i.reportedById === this.user?.id || i.assignedToId === this.user?.id
+    ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
   // STATS
   agentStats: any = null;
   globalStats: any = null;
@@ -294,7 +298,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.pollingInterval = setInterval(() => {
       // Refrescar datos automáticamente en vistas de gestión
-      const refreshViews = ['dashboard', 'agent_work', 'queue', 'mine', 'agent_history'];
+      const refreshViews = ['dashboard', 'agent_work', 'queue', 'mine', 'agent_history', 'admin_history'];
       if (refreshViews.includes(this.activeView)) {
         this.loadData();
       }
@@ -318,29 +322,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ─── META
   loadMeta(): void {
-    this.categoryService.getAll().subscribe((d: Category[]) => (this.categories = d));
+    this.categoryService.getAll().subscribe((d: Category[]) => {
+      Promise.resolve().then(() => {
+        this.categories = d;
+      });
+    });
+
     this.priorityService.getAll().subscribe((d: Priority[]) => {
       const seen = new Set();
-      this.priorities = d.filter(p => {
+      const filtered = d.filter(p => {
         const val = p.name.trim();
         if (seen.has(val)) return false;
         seen.add(val);
         return true;
       });
+      Promise.resolve().then(() => {
+        this.priorities = filtered;
+      });
     });
-    this.statusService.getAll().subscribe((d: Status[]) => (this.statuses = d));
+
+    this.statusService.getAll().subscribe((d: Status[]) => {
+      Promise.resolve().then(() => {
+        this.statuses = d;
+      });
+    });
     
     if (this.isAdminOrAgent()) {
       this.loadStats();
       this.loadAgents();
       if (this.isAdmin()) {
-        this.userService.getUsers().subscribe(d => this.users = d);
+        this.userService.getUsers().subscribe(d => {
+          Promise.resolve().then(() => {
+            this.users = d;
+          });
+        });
       }
     }
   }
 
   loadAgents(): void {
-    this.userService.getAgents().subscribe((d: Agent[]) => (this.agents = d));
+    this.userService.getAgents().subscribe((d: Agent[]) => {
+      Promise.resolve().then(() => {
+        this.agents = d;
+      });
+    });
   }
 
   loadStats(): void {
@@ -405,9 +430,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (view === 'dashboard' || view === 'agent_work') {
       if (this.isAdminOrAgent()) this.loadQueue();
       this.loadMine();
-    } else if (view === 'all') {
+    } else if (view === 'all' || view === 'admin_history' || view === 'agent_history') {
       this.loadAll();
-    } else if (view === 'mine' || view === 'agent_history') {
+    } else if (view === 'mine') {
       this.loadMyCreated();
     } else if (view === 'profile') {
       // Logic moved to ProfileComponent
@@ -428,8 +453,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loadQueue();
         this.loadMine();
         this.loadStats();
-      } else if (view === 'agent_history') {
-        this.loadMine();
+      } else if (view === 'agent_history' || view === 'admin_history') {
+        this.loadAll();
       }
     } else {
       // Empleado

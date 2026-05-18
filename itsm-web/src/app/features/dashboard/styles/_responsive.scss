@@ -251,13 +251,23 @@
   // Main sin padding excesivo
   .main-content { padding: 12px 14px; }
 
-  // Stats: 2 columnas pequeñas
+  // Stats: 2 columnas más compactas
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
-  .stat-card { padding: 12px 14px; }
-  .stat-num { font-size: 26px; }
+  .stat-card { padding: 10px 12px; }
+  .stat-num { font-size: 24px; }
+  .stat-label { font-size: 11px; }
+
+  // Tickets más compactos en móvil
+  .ticket-card {
+    padding: 10px 10px 8px;
+  }
+  .tc-title { font-size: 12px; }
+  .tc-cat { font-size: 10px; padding: 2px 6px; }
+  .tc-date { font-size: 10px; }
+  .tc-footer { gap: 4px; }
 
   // Kanban: solo la columna activa (gestionado con *ngIf en template)
   .kanban-board {

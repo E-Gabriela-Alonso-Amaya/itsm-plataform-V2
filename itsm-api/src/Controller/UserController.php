@@ -28,12 +28,12 @@ class UserController extends AbstractController
 
         $users = $userRepository->findAll();
         return $this->json(array_map(fn($u) => [
-            'id'    => $u->getId(),
+            'id'    => (string)$u->getId(),
             'name'  => $u->getName(),
             'email' => $u->getEmail(),
             'roles' => $u->getRoles(),
             'isActive' => $u->isActive(),
-            'companies' => array_values(array_map(fn($c) => ['id' => $c->getId(), 'name' => $c->getName()], $u->getCompanies()->toArray())),
+            'companies' => array_values(array_map(fn($c) => ['id' => (string)$c->getId(), 'name' => $c->getName()], $u->getCompanies()->toArray())),
         ], $users));
     }
 
@@ -54,11 +54,11 @@ class UserController extends AbstractController
         );
 
         return $this->json(array_values(array_map(fn($u) => [
-            'id'    => $u->getId(),
+            'id'    => (string)$u->getId(),
             'name'  => $u->getName(),
             'email' => $u->getEmail(),
             'roles' => $u->getRoles(),
-            'companies' => array_values(array_map(fn($c) => ['id' => $c->getId(), 'name' => $c->getName()], $u->getCompanies()->toArray())),
+            'companies' => array_values(array_map(fn($c) => ['id' => (string)$c->getId(), 'name' => $c->getName()], $u->getCompanies()->toArray())),
         ], $data)));
     }
 

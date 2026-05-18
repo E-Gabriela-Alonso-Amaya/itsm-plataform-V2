@@ -107,6 +107,11 @@ export class AdminService {
     return this.http.get<any[]>(`${this.base}/audit`);
   }
 
+  getCompanyHistory(companyId?: string): Observable<any[]> {
+    const options = companyId ? { params: { companyId } } : {};
+    return this.http.get<any[]>(`${this.base}/companies/history`, options);
+  }
+
   // ── EMPRESAS ──────────────────────────────────────────────────
   getCompanies(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/companies`);

@@ -29,3 +29,54 @@
 .justify-center {
   justify-content: center !important;
 }
+
+// Interactive Dashboard KPI Cards & Slide Down Animation
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+// Rings for active KPI Cards
+.ring-2 {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+.ring-sky-200 {
+  --tw-ring-color: rgba(14, 165, 233, 0.2);
+}
+.ring-amber-200 {
+  --tw-ring-color: rgba(245, 158, 11, 0.2);
+}
+.ring-purple-200 {
+  --tw-ring-color: rgba(168, 85, 247, 0.2);
+}
+.ring-emerald-200 {
+  --tw-ring-color: rgba(16, 185, 129, 0.2);
+}
+
+// Transition helper for SVG
+svg {
+  path {
+    transition: d 0.5s ease-out, stroke 0.3s ease;
+  }
+  circle {
+    transition: r 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), fill 0.2s ease, stroke-width 0.2s ease;
+  }
+}
+
+// Hover effects for agent performance table rows
+tr {
+  transition: background-color 0.15s ease;
+}
+

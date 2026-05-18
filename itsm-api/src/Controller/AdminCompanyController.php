@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Company;
 use App\Repository\CompanyRepository;
+use App\Repository\AuditLogRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\PriorityRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -43,6 +44,38 @@ class AdminCompanyController extends AbstractController
         
         $securityLogger->info('[ADMIN] Empresa creada', ['id' => $company->getId(), 'name' => $company->getName()]);
         return $this->json($this->serializeCompany($company), 201);
+    }
+
+    #[Route('/history', name: 'history', methods: ['GET'])]
+    public function history(Request $request, AuditLogRepository $repo): JsonResponse
+    {
+        $this->denyUnlessAdmin();
+        $companyId = $request->query->get('companyId');
+
+        $qb = $repo->createQueryBuilder('l')
+            ->join('l.incident', 'i')
+            ->join('i.company', 'c')
+            ->orderBy('l.createdAt', 'DESC')
+            ->setMaxResults(100);
+
+        if ($companyId) {
+            $qb->andWhere('c.id = :companyId')
+               ->setParameter('companyId', $companyId);
+        }
+
+        $logs = $qb->getQuery()->getResult();
+
+        return $this->json(array_map(fn($l) => [
+            'id' => $l->getId(),
+            'companyId' => (string)$l->getIncident()?->getCompany()?->getId(),
+            'companyName' => $l->getIncident()?->getCompany()?->getName(),
+            'incidentTitle' => $l->getIncident()?->getTitle(),
+            'changedBy' => $l->getChangedBy()?->getName(),
+            'field' => $l->getFieldChanged(),
+            'oldValue' => $l->getOldValue(),
+            'newValue' => $l->getNewValue(),
+            'createdAt' => $l->getCreatedAt()?->format('d/m/Y H:i')
+        ], $logs));
     }
 
     #[Route('/{id}', name: 'update', methods: ['PUT'])]

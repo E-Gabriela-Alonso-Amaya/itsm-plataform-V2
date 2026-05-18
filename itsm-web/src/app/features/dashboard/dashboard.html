@@ -58,24 +58,45 @@
             (goToCreate)="goToCreate()"
             (loadQueue)="loadQueue()"
             (clearFilters)="clearFilters()"
+            (viewHistory)="setView('agent_history')"
           ></app-agent-work>
         }
 
         <!-- VISTA: MIS TICKETS (HISTÓRICO AGENTE) -->
         @if (activeView === 'agent_history') {
-          <app-agent-history
-            [createdTickets]="myCreatedTickets"
-            [workedTickets]="myWorkedTickets"
-            [priorities]="priorities"
+          <app-all-incidents
+            [incidents]="myHistoryTickets"
             [categories]="categories"
-            (openDrawer)="openDrawer($event)"
-            (goToCreate)="goToCreate()"
-          ></app-agent-history>
+            [priorities]="priorities"
+            [statuses]="statuses"
+            [agents]="agents"
+            [users]="users"
+            [user]="user"
+            [pageTitle]="'Historial de mis tickets'"
+            [pageSubtitle]="'Filtra y revisa tus tickets creados o asignados'"
+            (open)="openDrawer($event)"
+          ></app-all-incidents>
         }
 
         <!-- VISTA: ADMIN PANEL -->
-        @if (activeView.startsWith('admin_')) {
+        @if (activeView.startsWith('admin_') && activeView !== 'admin_history') {
           <app-admin-panel [subView]="activeView" [selectedCompany]="selectedCompany"></app-admin-panel>
+        }
+
+        <!-- VISTA: HISTORIAL ADMIN -->
+        @if (activeView === 'admin_history') {
+          <app-all-incidents
+            [incidents]="incidents"
+            [categories]="categories"
+            [priorities]="priorities"
+            [statuses]="statuses"
+            [agents]="agents"
+            [users]="users"
+            [user]="user"
+            [pageTitle]="'Historial de Tickets'"
+            [pageSubtitle]="'Filtra y muestra todos los tickets del sistema'"
+            (open)="openDrawer($event)"
+          ></app-all-incidents>
         }
 
         <!-- VISTA: DASHBOARD -->
@@ -110,6 +131,7 @@
               [priorities]="priorities"
               [categories]="categories"
               [isMobile]="isMobile"
+              [isTablet]="isTablet"
               [activeKanbanTab]="activeKanbanTab"
               [agents]="agents"
               [assignDropdownId]="assignDropdownId"
@@ -140,6 +162,7 @@
               (updateStatus)="changeTicketStatus($event.ticket, $event.status)"
               (updatePriority)="changeTicketPriority($event.ticket, $event.priorityId)"
               (goToCreate)="goToCreate()"
+              (viewHistory)="setView('admin_history')"
             ></app-admin-dashboard>
           }
         }

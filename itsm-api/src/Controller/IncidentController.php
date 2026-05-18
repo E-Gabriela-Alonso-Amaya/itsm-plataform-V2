@@ -94,8 +94,11 @@ public function queue(
     ): JsonResponse {
 /** @var AppUser $user */
         $user = $this->getUser();
-if (!in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles())) {
-return $this->json(['error' => 'Acceso denegado'], 403);
+        if (!$user) {
+            return $this->json(['error' => 'No autenticado'], 401);
+        }
+        if (!in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles())) {
+            return $this->json(['error' => 'Acceso denegado'], 403);
         }
         $filterPriority = $request->query->get('priority');
         $filterCategory = $request->query->get('category');
@@ -484,20 +487,24 @@ public function create(
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         
-        // La prioridad es obligatoria para agentes/admins, pero para empleados la asignaremos por defecto
-        $isEmployee = in_array('ROLE_USER', $this->getUser()->getRoles());
-        
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'No autenticado'], 401);
+        }
+
         if (empty($data['title']) || empty($data['description']) || empty($data['categoryId'])) {
             return $this->json(['error' => 'Faltan campos obligatorios'], 400);
         }
-        
+
+        // La prioridad es obligatoria para agentes/admins, pero para empleados la asignaremos por defecto
+        $isEmployee = in_array('ROLE_USER', $user->getRoles());
+
         if (!$isEmployee && empty($data['priorityId'])) {
             return $this->json(['error' => 'La prioridad es obligatoria'], 400);
         }
 
         $category = $categoryRepository->find($data['categoryId']);
-        $status   = $statusRepository->findOneBy(['isDefault' => true]);
-        
+        $status = $statusRepository->findOneBy(['isDefault' => true]);
         $priority = null;
         if (!empty($data['priorityId'])) {
             $priority = $priorityRepository->find($data['priorityId']);
@@ -506,18 +513,23 @@ public function create(
         if (!$category || !$status) {
             return $this->json(['error' => 'Categoría o estado no encontrado'], 404);
         }
+
+        if (!$category->getCompany()) {
+            return $this->json(['error' => 'La categoría seleccionada no está asociada a ninguna empresa'], 400);
+        }
         
         // Si no es empleado y no se encontró la prioridad, error
         if (!$isEmployee && !$priority) {
              return $this->json(['error' => 'Prioridad no encontrada'], 404);
         }
+
         $incident = new Incident();
         $incident->setTitle($data['title']);
         $incident->setDescription($data['description']);
         $incident->setCategory($category);
         $incident->setPriority($priority);
         $incident->setStatus($status);
-        $incident->setReportedBy($this->getUser());
+        $incident->setReportedBy($user);
         $incident->setCompany($category->getCompany());
 // Asignación al crear
 if (in_array('ROLE_AGENT', $this->getUser()->getRoles()) && !empty($data['assignToMe'])) {
@@ -568,8 +580,11 @@ string $id,
         AuditLogRepository $auditLogRepository
     ): JsonResponse {
         $user = $this->getUser();
-if (!in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles())) {
-return $this->json(['error' => 'Acceso denegado'], 403);
+        if (!$user) {
+            return $this->json(['error' => 'No autenticado'], 401);
+        }
+        if (!in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles())) {
+            return $this->json(['error' => 'Acceso denegado'], 403);
         }
         $incident = $repository->find($id);
 if (!$incident) return $this->json(['error' => 'No encontrada'], 404);
