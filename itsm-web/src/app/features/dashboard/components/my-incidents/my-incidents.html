@@ -21,7 +21,6 @@
           <th>Estado</th>
           <th>Título</th>
           <th>Categoría</th>
-          <th>Prioridad</th>
           <th>Fecha</th>
           <th>Asignado</th>
         </tr>
@@ -38,9 +37,7 @@
               @if (hasUnreadComments(t.id)) { <span class="unread-dot"></span> }
             </td>
             <td>{{ t.category }}</td>
-            <td>
-              <span class="p-badge" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
-            </td>
+
             <td class="text-xs">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
             <td class="text-xs">{{ t.assignedTo || '---' }}</td>
           </tr>
@@ -53,9 +50,7 @@
             </td>
             <td class="text-slate-500">{{ t.title }}</td>
             <td>{{ t.category }}</td>
-            <td>
-              <span class="p-badge opacity-50" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
-            </td>
+
             <td class="text-xs">{{ t.createdAt | date: 'dd-MM-yyyy HH:mm' }}</td>
             <td class="text-xs">{{ t.assignedTo || '---' }}</td>
           </tr>

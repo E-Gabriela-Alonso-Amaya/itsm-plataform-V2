@@ -8,7 +8,6 @@
       <span class="drawer-id">{{ selectedTicket.id.slice(0,8).toUpperCase() }}</span>
       <span class="drawer-tit">{{ selectedTicket.title }}</span>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
-        <span class="p-badge" [ngClass]="getPriorityClass(selectedTicket.priority)">{{ selectedTicket.priority }}</span>
         <span class="dm-status">{{ selectedTicket.status }}</span>
         <span class="dm-cat">{{ selectedTicket.category }}</span>
       </div>

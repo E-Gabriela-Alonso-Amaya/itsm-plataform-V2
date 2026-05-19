@@ -74,6 +74,8 @@ export interface Comment {
   authorName: string;
   createdAt: string;
   isOwn?: boolean;
+  incidentStatus?: string;
+  statusChanged?: boolean;
 }
 
 export interface Agent {

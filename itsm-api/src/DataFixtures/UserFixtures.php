@@ -16,11 +16,7 @@ class UserFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         // Crear o reutilizar empresas base (idempotente)
-        $companyRepo = $manager->getRepository(\App\Entity\Company::class);
-        $companyGlobal = $companyRepo->findOneBy(['name' => 'Global']) ?? new \App\Entity\Company();
-        $companyGlobal->setName('Global')->setIsActive(true);
-        $manager->persist($companyGlobal);
-
+       
         $companyAlpha = $companyRepo->findOneBy(['name' => 'Alpha']) ?? new \App\Entity\Company();
         $companyAlpha->setName('Alpha')->setIsActive(true);
         $manager->persist($companyAlpha);

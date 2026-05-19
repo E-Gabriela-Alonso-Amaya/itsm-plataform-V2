@@ -235,7 +235,7 @@ class Incident
         return $this;
     }
 
-    public function setPriority(Priority $priority): static
+    public function setPriority(?Priority $priority): static
     {
         $this->priority = $priority;
         return $this;

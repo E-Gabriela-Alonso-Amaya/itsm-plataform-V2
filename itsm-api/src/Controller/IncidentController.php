@@ -412,17 +412,20 @@ return $this->json($this->serializeIncident($incident));
 // ─── SERIALIZER PRIVADO ───────────────────────────────────────────────────
 private function serializeIncident(Incident $incident): array
     {
-return [
-'id'            => (string) $incident->getId(),
-'title'         => $incident->getTitle(),
-'description'   => $incident->getDescription(),
-'category'      => $incident->getCategory()->getName(),
-'categoryId'    => (string) $incident->getCategory()->getId(),
-'priority'      => $incident->getPriority() ? $incident->getPriority()->getName() : 'Sin asignar',
-'priorityOrder' => $incident->getPriority() ? $incident->getPriority()->getSortOrder() : 999,
-'status'        => $incident->getStatus()->getName(),
-'statusId'      => (string) $incident->getStatus()->getId(),
-'isClosed'      => $incident->getStatus()->isClosed(),
+        $user = $this->getUser();
+        $isEmployee = $user && !in_array('ROLE_ADMIN', $user->getRoles()) && !in_array('ROLE_AGENT', $user->getRoles());
+
+        return [
+            'id'            => (string) $incident->getId(),
+            'title'         => $incident->getTitle(),
+            'description'   => $incident->getDescription(),
+            'category'      => $incident->getCategory()->getName(),
+            'categoryId'    => (string) $incident->getCategory()->getId(),
+            'priority'      => (!$isEmployee && $incident->getPriority()) ? $incident->getPriority()->getName() : null,
+            'priorityOrder' => (!$isEmployee && $incident->getPriority()) ? $incident->getPriority()->getSortOrder() : 999,
+            'status'        => $incident->getStatus()->getName(),
+            'statusId'      => (string) $incident->getStatus()->getId(),
+            'isClosed'      => $incident->getStatus()->isClosed(),
             'reportedBy'    => $incident->getReportedBy()->getName(),
             'reportedById'  => (string) $incident->getReportedBy()->getId(),
             'assignedTo'    => $incident->getAssignedTo() ? $incident->getAssignedTo()->getName() : null,
@@ -431,7 +434,7 @@ return [
             'updatedAt'     => $incident->getUpdatedAt()?->format('c'),
             'startedAt'     => $incident->getStartedAt() ? $incident->getStartedAt()->format('c') : null,
             'resolvedAt'    => $incident->getResolvedAt() ? $incident->getResolvedAt()->format('c') : null,
-            'slaHours'      => $incident->getPriority() ? $incident->getPriority()->getSlaHours() : 0,
+            'slaHours'      => (!$isEmployee && $incident->getPriority()) ? $incident->getPriority()->getSlaHours() : 0,
             'pausedAt'      => $incident->getPausedAt() ? $incident->getPausedAt()->format('c') : null,
             'totalPausedMs' => $incident->getTotalPausedMs(),
             'rating'        => $incident->getRating(),
@@ -508,6 +511,9 @@ public function create(
         $priority = null;
         if (!empty($data['priorityId'])) {
             $priority = $priorityRepository->find($data['priorityId']);
+        } elseif ($isEmployee) {
+            $priority = $priorityRepository->findOneBy(['name' => 'Baja'])
+                ?? $priorityRepository->findOneBy([]);
         }
 
         if (!$category || !$status) {

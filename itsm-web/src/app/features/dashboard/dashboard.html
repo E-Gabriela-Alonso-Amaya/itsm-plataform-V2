@@ -276,4 +276,29 @@
       (close)="previewAttachment = null"
     ></app-lightbox>
   }
+
+  <!-- TOAST NOTIFICACIÓN PREMIUM FLOTANTE -->
+  @if (toast) {
+    <div class="premium-toast" [class.show]="toast.visible" [class.success]="toast.type === 'success'" [class.error]="toast.type === 'error'" [class.info]="toast.type === 'info'">
+      <div class="toast-progress"></div>
+      <div class="toast-body">
+        <div class="toast-icon-circle">
+          @if (toast.type === 'success') { <mat-icon>check_circle</mat-icon> }
+          @if (toast.type === 'info')    { <mat-icon>info</mat-icon> }
+          @if (toast.type === 'error')   { <mat-icon>error</mat-icon> }
+        </div>
+        <div class="toast-content">
+          <div class="toast-headline">
+            @if (toast.type === 'success') { <span>Acción Realizada</span> }
+            @if (toast.type === 'info')    { <span>Notificación</span> }
+            @if (toast.type === 'error')   { <span>Fallo de Operación</span> }
+          </div>
+          <div class="toast-desc">{{ toast.message }}</div>
+        </div>
+        <button class="toast-close" (click)="toast.visible = false" title="Cerrar">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+  }
 </div>

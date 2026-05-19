@@ -189,6 +189,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   unassignedCount: number = 0;
   totalIncidents: number = 0;
 
+  // TOAST FLOATING NOTIFICATION
+  toast: { message: string; visible: boolean; type: 'success' | 'info' | 'error' } | null = null;
+  private toastTimeout: any = null;
+
   // PERFIL (Movido a ProfileComponent)
 
   get myCreatedTickets(): Incident[] {
@@ -487,7 +491,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           : data.filter((i) => !i.assignedToId || i.assignedToId === this.user?.id);
         this.totalIncidents = data.length;
         this.unassignedCount = data.filter((i) => !i.assignedTo).length;
-        this.detectUnreadComments(this.queueIncidents);
         this.updateKanbanColumns();
         this.loadingQueue = false;
         this.cdr.detectChanges();
@@ -650,7 +653,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         const mine = this.sortByPriority(data).filter((i) => i.reportedById === this.user?.id);
         this.incidentsOpenAdmin = mine.filter((i) => !i.isClosed);
         this.incidentsResolvedAdmin = mine.filter((i) => i.isClosed);
-        this.detectUnreadComments(this.incidentsOpenAdmin);
         this.loadingList = false;
         this.cdr.detectChanges();
       },
@@ -675,14 +677,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.allMyIncidents = allMine;
           this.incidentsOpen = allMine.filter((i) => !i.isClosed);
           this.incidentsResolved = allMine.filter((i) => i.isClosed && this.isWithin24h(i));
-          this.detectUnreadComments(this.incidentsOpen);
         } else {
           const mine = sorted.filter(
             (i) => i.reportedById === this.user?.id || i.assignedToId === this.user?.id,
           );
           this.incidentsOpenAdmin = mine.filter((i) => !i.isClosed);
           this.incidentsResolvedAdmin = mine.filter((i) => i.isClosed);
-          this.detectUnreadComments(this.incidentsOpenAdmin);
         }
 
         this.loadingList = false;
@@ -730,26 +730,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.isMobile || this.isTablet;
   }
 
-  private detectUnreadComments(incidents: Incident[]): void {
-    incidents.forEach((incident) => {
-      this.commentService.getByIncident(incident.id).subscribe({
-        next: (comments: Comment[]) => {
-          this.commentsByTicket[incident.id] = comments.length;
-          const unread = comments.filter(
-            (c) => c.authorId !== this.user?.id && !this.readCommentIds.has(c.id),
-          );
-          const newSet = new Set<string>(this.ticketsWithUnreadComments);
-          if (unread.length > 0) {
-            newSet.add(incident.id);
-          } else {
-            newSet.delete(incident.id);
-          }
-          this.ticketsWithUnreadComments = newSet;
-          this.cdr.detectChanges();
-        },
-      });
-    });
-  }
+  // Removed detectUnreadComments to prevent premature flag clearing in the database
 
   private sortByPriority(data: Incident[]): Incident[] {
     return [...data].sort((a, b) => {
@@ -845,6 +826,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  // TOAST FLOATING NOTIFICATION METHOD
+  showToast(type: 'success' | 'info' | 'error', message: string): void {
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+    this.toast = { message, visible: true, type };
+    this.cdr.detectChanges();
+
+    this.toastTimeout = setTimeout(() => {
+      if (this.toast) {
+        this.toast.visible = false;
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.toast = null;
+          this.cdr.detectChanges();
+        }, 400); // allow transition out
+      }
+    }, 4000);
+  }
+
   sendComment(content?: string): void {
     const text = content ?? this.newComment.trim();
     if (!text || !this.selectedTicket) return;
@@ -856,15 +857,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (!content) this.newComment = '';
         this.sendingComment = false;
 
-        if (this.isAdminOrAgent() && this.selectedTicket) {
-          const esperaStatus = this.statuses.find((s) => s.name === 'Espera info');
-          if (
-            esperaStatus &&
-            !this.selectedTicket.isClosed &&
-            this.selectedTicket.status === 'Procesando' // Solo si estaba procesando
-          ) {
-            this.changeTicketStatus(this.selectedTicket, esperaStatus.name);
-          }
+        const resComment = comment as any;
+        if (resComment.statusChanged && resComment.incidentStatus && this.selectedTicket) {
+          this.selectedTicket.status = resComment.incidentStatus;
+          this.updateTicketInLists(this.selectedTicket);
+          this.showToast('success', 'Mensaje enviado. El ticket ha cambiado automáticamente a la columna \'En Espera\'.');
+        } else {
+          this.showToast('success', 'Mensaje enviado correctamente.');
+        }
+
+        // Sincronizar listas según rol
+        if (this.isAdminOrAgent()) {
+          this.loadQueue();
+        } else {
+          this.loadMine();
         }
 
         this.cdr.detectChanges();
@@ -872,6 +878,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.sendingComment = false;
+        this.showToast('error', 'Error al enviar el mensaje.');
         this.cdr.detectChanges();
       },
     });
@@ -1174,8 +1181,27 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isAssignedToMe(ticket: Incident): boolean {
     return ticket.assignedToId === this.user?.id;
   }
+  private findTicketById(ticketId: string): Incident | undefined {
+    const allLists = [
+      this.incidents,
+      this.queueIncidents,
+      this.incidentsOpenAdmin,
+      this.incidentsResolvedAdmin,
+      this.incidentsOpen,
+      this.incidentsResolved,
+    ];
+    for (const list of allLists) {
+      if (!list) continue;
+      const found = list.find((t) => t.id === ticketId);
+      if (found) return found;
+    }
+    return undefined;
+  }
+
   hasUnreadComments(ticketId: string): boolean {
-    return this.ticketsWithUnreadComments.has(ticketId);
+    const t = this.findTicketById(ticketId);
+    if (!t) return false;
+    return this.isAdminOrAgent() ? !!t.hasUnreadMessagesForAgent : !!t.hasUnreadMessagesForEmployee;
   }
   hasComments(ticketId: string): boolean {
     return (this.commentsByTicket[ticketId] ?? 0) > 0;
@@ -1307,15 +1333,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch {}
     
     // Actualizar flags en el objeto local para feedback inmediato
-    const ticket = this.incidents.find(i => i.id === ticketId);
-    if (ticket) {
-      ticket.hasUnreadMessagesForAgent = false;
-      ticket.hasUnreadMessagesForEmployee = false;
-    }
+    const updateFlags = (list: Incident[]) => {
+      const t = list.find((i) => i.id === ticketId);
+      if (t) {
+        t.hasUnreadMessagesForAgent = false;
+        t.hasUnreadMessagesForEmployee = false;
+      }
+    };
+    updateFlags(this.incidents);
+    updateFlags(this.queueIncidents);
+    updateFlags(this.incidentsOpenAdmin);
+    updateFlags(this.incidentsResolvedAdmin);
+    updateFlags(this.incidentsOpen);
+    updateFlags(this.incidentsResolved);
+
     if (this.selectedTicket && this.selectedTicket.id === ticketId) {
       this.selectedTicket.hasUnreadMessagesForAgent = false;
       this.selectedTicket.hasUnreadMessagesForEmployee = false;
     }
+
+    this.updateKanbanColumns();
 
     const newSet = new Set<string>(this.ticketsWithUnreadComments);
     newSet.delete(ticketId);

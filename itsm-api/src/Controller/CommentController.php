@@ -106,31 +106,44 @@ class CommentController extends AbstractController
 
         $em->persist($comment);
 
-        // Si el técnico comenta, el ticket pasa a estado 'Espera info' y pausa el temporizador SLA
+        // Si se comenta (tanto técnico como empleado), el ticket pasa a estado 'Espera info' y pausa el temporizador SLA
         if ($isAgentOrAdmin) {
             $incident->setHasUnreadMessagesForEmployee(true);
-            
-            $oldStatus = $incident->getStatus();
-            $oldStatusName = $oldStatus->getName();
-            $waitingStatusNames = ['Espera información', 'Espera info', 'Espera', 'Pendiente'];
-            
-            if (!in_array($oldStatusName, $waitingStatusNames) && !$oldStatus->isClosed()) {
-                $newStatus = $statusRepository->findOneBy(['name' => 'Espera info']);
-                if ($newStatus) {
-                    $log = new \App\Entity\AuditLog();
-                    $log->setIncident($incident);
-                    $log->setChangedBy($user);
-                    $log->setFieldChanged('status');
-                    $log->setOldValue($oldStatusName);
-                    $log->setNewValue($newStatus->getName());
-                    $em->persist($log);
-                    
-                    $incident->setStatus($newStatus);
-                    $incident->setPausedAt(new \DateTimeImmutable());
-                }
-            }
+            $incident->setHasUnreadMessagesForAgent(false);
         } else {
             $incident->setHasUnreadMessagesForAgent(true);
+            $incident->setHasUnreadMessagesForEmployee(false);
+        }
+
+        $oldStatus = $incident->getStatus();
+        $oldStatusName = $oldStatus->getName();
+        $waitingStatusNames = ['Espera información', 'Espera info', 'Espera', 'Pendiente'];
+
+        $statusChanged = false;
+        if (!in_array($oldStatusName, $waitingStatusNames) && !$oldStatus->isClosed()) {
+            // Buscar el estado 'Espera info'; crearlo si no existe (auto-heal)
+            $newStatus = $statusRepository->findOneBy(['name' => 'Espera info']);
+            if (!$newStatus) {
+                $newStatus = new \App\Entity\Status();
+                $newStatus->setName('Espera info')
+                          ->setIsDefault(false)
+                          ->setIsClosed(false)
+                          ->setSortOrder(4)
+                          ->setIsActive(true);
+                $em->persist($newStatus);
+            }
+
+            $log = new \App\Entity\AuditLog();
+            $log->setIncident($incident);
+            $log->setChangedBy($user);
+            $log->setFieldChanged('status');
+            $log->setOldValue($oldStatusName);
+            $log->setNewValue($newStatus->getName());
+            $em->persist($log);
+
+            $incident->setStatus($newStatus);
+            $incident->setPausedAt(new \DateTimeImmutable());
+            $statusChanged = true;
         }
 
         $em->flush();
@@ -141,6 +154,8 @@ class CommentController extends AbstractController
             'authorId'   => (string) $comment->getAuthor()->getId(),
             'authorName' => $comment->getAuthor()->getName(),
             'createdAt'  => $comment->getCreatedAt()?->format('c'),
+            'incidentStatus' => $incident->getStatus()->getName(),
+            'statusChanged'  => $statusChanged,
         ], 201);
     }
 }

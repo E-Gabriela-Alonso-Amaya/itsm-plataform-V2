@@ -47,6 +47,18 @@ export class IncidentListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.authService.me().subscribe({
+      next: (resp) => {
+        const user = resp.user;
+        const isAdmin = user.roles?.includes('ROLE_ADMIN');
+        const isAgent = user.roles?.includes('ROLE_AGENT');
+        const isEmployee = !isAdmin && !isAgent;
+        if (isEmployee) {
+          this.displayedColumns = this.displayedColumns.filter(c => c !== 'priority');
+        }
+      }
+    });
+
     this.incidentService.getAll().subscribe({
       next: (data) => {
         console.log('Prioridades recibidas:', data.map(i => i.priority));
